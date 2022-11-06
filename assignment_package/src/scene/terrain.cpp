@@ -2,6 +2,7 @@
 #include "cube.h"
 #include <stdexcept>
 #include <iostream>
+#include "noise_functions.h"
 
 Terrain::Terrain(OpenGLContext *context)
     : m_chunks(), m_generatedTerrain(), m_geomCube(context), mp_context(context)
@@ -171,6 +172,9 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
                             case WATER:
                                 colors.push_back(glm::vec3(0.f, 0.f, 0.75f));
                                 break;
+                            case SNOW:
+                                colors.push_back(glm::vec3(1.f, 1.f, 1.00f));
+                                break;
                             default:
                                 // Other block types are not yet handled, so we default to debug purple
                                 colors.push_back(glm::vec3(1.f, 0.f, 1.f));
@@ -205,26 +209,65 @@ void Terrain::CreateTestScene()
     // now exists.
     m_generatedTerrain.insert(toKey(0, 0));
 
-    // Create the basic terrain floor
-    for(int x = 0; x < 64; ++x) {
+    // Create grass mountain
+    for(int x = 0; x < 32; ++x) {
         for(int z = 0; z < 64; ++z) {
-            if((x + z) % 2 == 0) {
-                setBlockAt(x, 128, z, STONE);
-            }
-            else {
-                setBlockAt(x, 128, z, DIRT);
+            int height = mountainValue(vec2(x,z));
+            for(int k = 0; k <= height; k++) {
+                if(k < height) {
+                    if(k > 128) {
+                        setBlockAt(x,k,z, GRASS);
+                    } else {
+                        setBlockAt(x,k,z,STONE);
+                    }
+                } else {
+                    setBlockAt(x,k,z,SNOW);
+                }
+                if(k >= 128 && k <= 138 && getBlockAt(vec3(x,k,z)) == EMPTY) {
+                    setBlockAt(x,k,z,WATER);
+                }
             }
         }
     }
+    // Create Grassland
+    for(int x = 32; x < 64; ++x) {
+        for(int z = 0; z < 64; ++z) {
+            int height = grasslandValue(vec2(x,z));
+            for(int k = 0; k <= height; k++) {
+                if(k < height) {
+                    if(k <= 128) {
+                        setBlockAt(x,k,z,STONE);
+                    } else {
+                        setBlockAt(x,k,z,DIRT);
+                    }
+                } else {
+                    setBlockAt(x,k,z,GRASS);
+                }
+
+            }
+        }
+    }
+    // fill water
+    for(int x = 0; x < 64; x++) {
+        for(int z = 0; z < 64; z++) {
+            for(int k = 128; k <= 138; k++) {
+                auto t = getBlockAt(x,k,z);
+                if(t == EMPTY) {
+                    setBlockAt(x,k,z, WATER);
+                }
+            }
+        }
+    }
+
     // Add "walls" for collision testing
-    for(int x = 0; x < 64; ++x) {
-        setBlockAt(x, 129, 0, GRASS);
-        setBlockAt(x, 130, 0, GRASS);
-        setBlockAt(x, 129, 63, GRASS);
-        setBlockAt(0, 130, x, GRASS);
-    }
+//    for(int x = 0; x < 64; ++x) {
+//        setBlockAt(x, 129, 0, GRASS);
+//        setBlockAt(x, 130, 0, GRASS);
+//        setBlockAt(x, 129, 63, GRASS);
+//        setBlockAt(0, 130, x, GRASS);
+//    }
     // Add a central column
-    for(int y = 129; y < 140; ++y) {
-        setBlockAt(32, y, 32, GRASS);
-    }
+//    for(int y = 129; y < 140; ++y) {
+//        setBlockAt(32, y, 32, GRASS);
+//    }
 }
