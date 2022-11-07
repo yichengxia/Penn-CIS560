@@ -9,12 +9,12 @@ Player::Player(glm::vec3 pos, Terrain &terrain)
       mcr_terrain(terrain),
       m_maxVelocity(glm::vec3(0.3)), m_minVelocity(glm::vec3(-0.3)),
       inFlightMode(true), isFlyingUp(false),
-      Acceleration(glm::vec3(0.01)),
+      Acceleration(glm::vec3(0.005)),
       Friction(glm::vec3(-0.005)),
-      Gravity(-0.006),
+      Gravity(-0.0055),
       MaxVelocity(glm::vec3(0.3)), MinVelocity(glm::vec3(-0.3)),
       FlightModeHeight(139.f), MaxFlightHeight(255.f), MinFlightHeight(0.f),
-      FlyUpAcceleration(0.01), JumpVelocity(0.1),
+      FlyUpAcceleration(0.01), JumpVelocity(0.3),
       mcr_camera(m_camera)
 {}
 
@@ -165,7 +165,7 @@ void Player::moveAlongVectorWithCollisions(glm::vec3 dir) {
             glm::ivec3 out_blockHit, prevCell;
             bool isBlocked = gridMarch(rayOrigin, rayDirection, mcr_terrain, &outdist, &out_blockHit, &prevCell);
             if (isBlocked) {
-                dir[axis] = 0;
+                dir[axis] = glm::sign(dir[axis]) * (glm::min(outdist, glm::abs(dir[axis])) - 0.0001f);
                 m_velocity[axis] = 0;
             }
         }
@@ -243,6 +243,7 @@ void Player::changeFlightMode() {
     inFlightMode = not inFlightMode;
     if (inFlightMode) { // from ground to flight
         isFlyingUp = true;
+        FlightModeHeight = m_position.y + 10;
     }
 }
 
