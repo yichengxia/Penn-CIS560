@@ -7,7 +7,17 @@ class Player : public Entity {
 private:
     glm::vec3 m_velocity, m_acceleration;
     Camera m_camera;
-    const Terrain &mcr_terrain;
+    glm::vec2 m_cameraOrientation;
+    Terrain &mcr_terrain;
+    glm::vec3 m_maxVelocity, m_minVelocity;
+    bool inFlightMode, isFlyingUp;
+    const glm::vec3 Acceleration;
+    const glm::vec3 Friction;
+    const float Gravity;
+    const glm::vec3 MaxVelocity, MinVelocity;
+    const float FlightModeHeight, MaxFlightHeight, MinFlightHeight;
+    const float FlyUpAcceleration, JumpVelocity;
+
 
     void processInputs(InputBundle &inputs);
     void computePhysics(float dT, const Terrain &terrain);
@@ -17,7 +27,7 @@ public:
     // for easy access from MyGL
     const Camera& mcr_camera;
 
-    Player(glm::vec3 pos, const Terrain &terrain);
+    Player(glm::vec3 pos, Terrain &terrain);
     virtual ~Player() override;
 
     void setCameraWidthHeight(unsigned int w, unsigned int h);
@@ -28,6 +38,7 @@ public:
     // functions so that it transforms its camera
     // by the same amount as it transforms itself.
     void moveAlongVector(glm::vec3 dir) override;
+    void moveAlongVectorWithCollisions(glm::vec3 dir);
     void moveForwardLocal(float amount) override;
     void moveRightLocal(float amount) override;
     void moveUpLocal(float amount) override;
@@ -47,4 +58,10 @@ public:
     QString velAsQString() const;
     QString accAsQString() const;
     QString lookAsQString() const;
+
+    void changeFlightMode();
+    void removeBlock();
+    void placeBlock();
 };
+
+bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit, glm::ivec3 *prevCell);

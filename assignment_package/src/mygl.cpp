@@ -4,13 +4,15 @@
 #include <iostream>
 #include <QApplication>
 #include <QKeyEvent>
+#include <QDateTime>
 
 
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this),
-      m_terrain(this), m_player(glm::vec3(48.f, 129.f, 48.f), m_terrain)
+      m_terrain(this), m_player(glm::vec3(48.f, 139.f, 48.f), m_terrain),
+      m_prevFrameTime(QDateTime::currentMSecsSinceEpoch())
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
@@ -94,8 +96,12 @@ void MyGL::resizeGL(int w, int h) {
 // all per-frame actions here, such as performing physics updates on all
 // entities in the scene.
 void MyGL::tick() {
+    qint64 currFrameTime = QDateTime::currentMSecsSinceEpoch();
+    float dT = (currFrameTime - m_prevFrameTime) * 0.1f;
+    m_player.tick(dT, m_inputs);
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
+    m_prevFrameTime = currFrameTime;
 }
 
 void MyGL::sendPlayerDataToGUI() const {
@@ -150,33 +156,84 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
     // chain of if statements instead
     if (e->key() == Qt::Key_Escape) {
         QApplication::quit();
-    } else if (e->key() == Qt::Key_Right) {
-        m_player.rotateOnUpGlobal(-amount);
-    } else if (e->key() == Qt::Key_Left) {
-        m_player.rotateOnUpGlobal(amount);
-    } else if (e->key() == Qt::Key_Up) {
-        m_player.rotateOnRightLocal(-amount);
-    } else if (e->key() == Qt::Key_Down) {
-        m_player.rotateOnRightLocal(amount);
-    } else if (e->key() == Qt::Key_W) {
-        m_player.moveForwardLocal(amount);
-    } else if (e->key() == Qt::Key_S) {
-        m_player.moveForwardLocal(-amount);
-    } else if (e->key() == Qt::Key_D) {
-        m_player.moveRightLocal(amount);
-    } else if (e->key() == Qt::Key_A) {
-        m_player.moveRightLocal(-amount);
-    } else if (e->key() == Qt::Key_Q) {
-        m_player.moveUpGlobal(-amount);
-    } else if (e->key() == Qt::Key_E) {
-        m_player.moveUpGlobal(amount);
     }
+    if (e->key() == Qt::Key_W) {
+        //  In flight mode: Accelerate positively along forward vector
+        //  In Ground mode: Accelerate positively along forward vector, discarding Y component and re-normalizing
+        m_inputs.wPressed = true;
+    }
+    if (e->key() == Qt::Key_S) {
+        // In flight mode: Accelerate negatively along forward vector
+        // In Ground mode: Accelerate negatively along forward vector, discarding Y component and re-normalizing
+        m_inputs.sPressed = true;
+    }
+    if (e->key() == Qt::Key_D) {
+        // In flight mode: Accelerate positively along right vector
+        // In Ground mode: Accelerate positively along right vector, discarding Y component and re-normalizing
+        m_inputs.dPressed = true;
+    }
+    if (e->key() == Qt::Key_A) {
+        // In flight mode: Accelerate negatively along right vector
+        // In Ground mode: Accelerate negatively along right vector, discarding Y component and re-normalizing
+        m_inputs.aPressed = true;
+    }
+    if (e->key() == Qt::Key_Q) {
+        // In flight mode: Accelerate negatively along up vector
+        m_inputs.qPressed = true;
+    }
+    if (e->key() == Qt::Key_E) {
+        // In flight mode: Accelerate positively along up vector
+        m_inputs.ePressed = true;
+    }
+    if (e->key() == Qt::Key_F) {
+        // In flight mode: Toggle flight mode OFF
+        // In Ground mode: Toggle flight mode ON
+        m_player.changeFlightMode();
+    }
+    if (e->key() == Qt::Key_Space) {
+        // In Ground mode: Add a vertical component to the player's velocity to make them jump
+        m_inputs.spacePressed = true;
+   }
+}
+
+void MyGL::keyReleaseEvent(QKeyEvent *e) {
+    if (e->key() == Qt::Key_W) {
+        m_inputs.wPressed = false;
+    }
+    if (e->key() == Qt::Key_S) {
+        m_inputs.sPressed = false;
+    }
+    if (e->key() == Qt::Key_D) {
+        m_inputs.dPressed = false;
+    }
+    if (e->key() == Qt::Key_A) {
+        m_inputs.aPressed = false;
+    }
+    if (e->key() == Qt::Key_Q) {
+        m_inputs.qPressed = false;
+    }
+    if (e->key() == Qt::Key_E) {
+        m_inputs.ePressed = false;
+    }
+    if (e->key() == Qt::Key_Space) {
+        m_inputs.spacePressed = false;
+   }
 }
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
-    // TODO
+    // MS1.3
+    QPoint mousePos = e->pos();
+    QPoint centerPos = QPoint(width() / 2, height() / 2);
+    m_inputs.mouseX = centerPos.x() - mousePos.x() ;
+    m_inputs.mouseY = centerPos.y() - mousePos.y();
+    moveMouseToCenter();
 }
 
 void MyGL::mousePressEvent(QMouseEvent *e) {
-    // TODO
+    // MS1.3
+    if (e->button() == Qt::LeftButton) {
+        m_player.removeBlock();
+    } else if (e->button() == Qt::RightButton) {
+        m_player.placeBlock();
+    }
 }
