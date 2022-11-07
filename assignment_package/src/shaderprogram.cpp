@@ -235,6 +235,52 @@ void ShaderProgram::drawInstanced(InstancedDrawable &d)
 
 }
 
+// Draw the given object to our screen using interleaved VBOs
+void ShaderProgram::drawInterleaved(Drawable &d) {
+    useMe();
+
+    if(d.elemCount() < 0) {
+        throw std::out_of_range("Attempting to draw a drawable with m_count of " + std::to_string(d.elemCount()) + "!");
+    }
+
+    // Each of the following blocks checks that:
+    //   * This shader has this attribute, and
+    //   * This Drawable has a vertex buffer for this attribute.
+    // If so, it binds the appropriate buffers to each attribute.
+
+    // Remember, by calling bindPos(), we call
+    // glBindBuffer on the Drawable's VBO for vertex position,
+    // meaning that glVertexAttribPointer associates vs_Pos
+    // (referred to by attrPos) with that VBO
+    if (attrPos != -1 && d.bindPos()) {
+        context->glEnableVertexAttribArray(attrPos);
+        context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) 0);
+        context->glVertexAttribDivisor(attrPos, 0);
+    }
+
+    if (attrNor != -1 && d.bindNor()) {
+        context->glEnableVertexAttribArray(attrNor);
+        context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) sizeof(glm::vec4));
+        context->glVertexAttribDivisor(attrNor, 0);
+    }
+
+    if (attrCol != -1 && d.bindCol()) {
+        context->glEnableVertexAttribArray(attrCol);
+        context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) (2 * sizeof(glm::vec4)));
+        context->glVertexAttribDivisor(attrCol, 1);
+    }
+
+    // Bind the index buffer and then draw shapes from it.
+    // This invokes the shader program, which accesses the vertex buffers.
+    d.bindIdx();
+    context->glDrawElements(d.drawMode(), d.elemCount(), GL_UNSIGNED_INT, 0);
+    context->printGLErrorLog();
+
+    if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
+    if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
+    if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
+}
+
 char* ShaderProgram::textFileRead(const char* fileName) {
     char* text;
 
