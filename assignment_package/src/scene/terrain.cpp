@@ -222,4 +222,8 @@ void Terrain::CreateTestScene()
     for(int y = 129; y < 140; ++y) {
         setBlockAt(32, y, 32, GRASS);
     }
+
+    for (auto &kvp : m_chunks) {
+        kvp.second->createVBOdata();
+    }
 }

@@ -8,6 +8,37 @@ Chunk::Chunk(OpenGLContext* mp_context) : Drawable(mp_context), m_blocks(), m_ne
 
 // Does bounds checking with at()
 BlockType Chunk::getBlockAt(unsigned int x, unsigned int y, unsigned int z) const {
+    if ((int) x < 0) {
+        if (m_neighbors.at(XNEG) == nullptr) {
+            return DEBUG;
+        }
+        return m_neighbors.at(XNEG)->getBlockAt(x + 16, y, z);
+    } else if ((int) x >= 16) {
+        if (m_neighbors.at(XPOS) == nullptr) {
+            return DEBUG;
+        }
+        return m_neighbors.at(XPOS)->getBlockAt(x - 16, y, z);
+    } else if ((int) y < 0) {
+        if (m_neighbors.at(YNEG) == nullptr) {
+            return DEBUG;
+        }
+        return m_neighbors.at(YNEG)->getBlockAt(x, y + 256, z);
+    } else if ((int) y >= 256) {
+        if (m_neighbors.at(YPOS) == nullptr) {
+            return DEBUG;
+        }
+        return m_neighbors.at(YPOS)->getBlockAt(x, y - 256, z);
+    } else if ((int) z < 0) {
+        if (m_neighbors.at(ZNEG) == nullptr) {
+            return DEBUG;
+        }
+        return m_neighbors.at(ZNEG)->getBlockAt(x, y, z + 16);
+    } else if ((int) z >= 16) {
+        if (m_neighbors.at(ZPOS) == nullptr) {
+            return DEBUG;
+        }
+        return m_neighbors.at(ZPOS)->getBlockAt(x, y, z - 16);
+    }
     return m_blocks.at(x + 16 * y + 16 * 256 * z);
 }
 

@@ -1,14 +1,13 @@
 #pragma once
 #include "glm/glm.hpp"
 #include <array>
-#include <unordered_set>
 
 // C++ 11 allows us to define the size of an enum. This lets us use only one byte
 // of memory to store our different block types. By default, the size of a C++ enum
 // is that of an int (so, usually four bytes). This *does* limit us to only 256 different
 // block types, but in the scope of this project we'll never get anywhere near that many.
 enum BlockType : unsigned char {
-    EMPTY, GRASS, DIRT, STONE, WATER
+    EMPTY, GRASS, DIRT, STONE, WATER, DEBUG
 };
 
 // The six cardinal directions in 3D space
