@@ -15,7 +15,8 @@ private:
     const glm::vec3 Friction;
     const float Gravity;
     const glm::vec3 MaxVelocity, MinVelocity;
-    const float FlightModeHeight, MaxFlightHeight, MinFlightHeight;
+    float FlightModeHeight;
+    const float MaxFlightHeight, MinFlightHeight;
     const float FlyUpAcceleration, JumpVelocity;
 
 

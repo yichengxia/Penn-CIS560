@@ -11,7 +11,7 @@ MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this),
-      m_terrain(this), m_player(glm::vec3(48.f, 139.f, 48.f), m_terrain),
+      m_terrain(this), m_player(glm::vec3(48.f, 148.f, 48.f), m_terrain),
       m_prevFrameTime(QDateTime::currentMSecsSinceEpoch())
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
@@ -156,6 +156,14 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
     // chain of if statements instead
     if (e->key() == Qt::Key_Escape) {
         QApplication::quit();
+    } else if (e->key() == Qt::Key_Right) {
+        m_inputs.mouseX = -100;
+    } else if (e->key() == Qt::Key_Left) {
+        m_inputs.mouseX = 100;
+    } else if (e->key() == Qt::Key_Up) {
+        m_inputs.mouseY = 100;
+    } else if (e->key() == Qt::Key_Down) {
+        m_inputs.mouseY = -100;
     }
     if (e->key() == Qt::Key_W) {
         //  In flight mode: Accelerate positively along forward vector
@@ -197,6 +205,15 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
 }
 
 void MyGL::keyReleaseEvent(QKeyEvent *e) {
+    if (e->key() == Qt::Key_Right) {
+        m_inputs.mouseX = 0;
+    } else if (e->key() == Qt::Key_Left) {
+        m_inputs.mouseX = 0;
+    } else if (e->key() == Qt::Key_Up) {
+        m_inputs.mouseY = 0;
+    } else if (e->key() == Qt::Key_Down) {
+        m_inputs.mouseY = 0;
+    }
     if (e->key() == Qt::Key_W) {
         m_inputs.wPressed = false;
     }
