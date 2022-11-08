@@ -7,14 +7,14 @@ Player::Player(glm::vec3 pos, Terrain &terrain)
       m_camera(pos + glm::vec3(0, 1.5, 0)),
       m_cameraOrientation(glm::vec2(0, 0)),
       mcr_terrain(terrain),
-      m_maxVelocity(glm::vec3(0.3)), m_minVelocity(glm::vec3(-0.3)),
+      m_maxVelocity(glm::vec3(0.15)), m_minVelocity(glm::vec3(-0.15)),
       inFlightMode(true), isFlyingUp(false),
       Acceleration(glm::vec3(0.005)),
-      Friction(glm::vec3(-0.005)),
+      Friction(glm::vec3(-0.002)),
       Gravity(-0.0055),
-      MaxVelocity(glm::vec3(0.3)), MinVelocity(glm::vec3(-0.3)),
+      MaxVelocity(glm::vec3(0.15)), MinVelocity(glm::vec3(-0.15)),
       FlightModeHeight(139.f), MaxFlightHeight(255.f), MinFlightHeight(0.f),
-      FlyUpAcceleration(0.01), JumpVelocity(0.3),
+      FlyUpAcceleration(0.01), JumpVelocity(0.2),
       mcr_camera(m_camera)
 {}
 
@@ -97,6 +97,10 @@ void Player::processInputs(InputBundle &inputs) {
         }
     }
     // Have player face correct direction
+    if ((not inputs.focused) || (glm::abs(inputs.mouseX) < 5 && glm::abs(inputs.mouseY) < 5)) {
+        return;
+    }
+
     glm::vec2 cameraOrientationOrigin = m_cameraOrientation;
 
     float thetaChange = 0.05 * (inputs.mouseX);

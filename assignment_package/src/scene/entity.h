@@ -5,12 +5,14 @@ struct InputBundle {
     bool wPressed, aPressed, sPressed, dPressed, qPressed, ePressed;
     bool spacePressed;
     float mouseX, mouseY;
+    bool focused;
 
     InputBundle()
         : wPressed(false), aPressed(false), sPressed(false),
           dPressed(false), qPressed(false), ePressed(false),
-          spacePressed(false), mouseX(0.f), mouseY(0.f)
+          spacePressed(false), mouseX(0.f), mouseY(0.f), focused(false)
     {}
+
 };
 
 class Entity {
