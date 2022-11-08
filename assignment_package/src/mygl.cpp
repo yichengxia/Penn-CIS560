@@ -98,6 +98,7 @@ void MyGL::resizeGL(int w, int h) {
 void MyGL::tick() {
     qint64 currFrameTime = QDateTime::currentMSecsSinceEpoch();
     float dT = (currFrameTime - m_prevFrameTime) * 0.1f;
+    m_inputs.focused = this->hasFocus();
     m_player.tick(dT, m_inputs);
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
@@ -241,9 +242,15 @@ void MyGL::mouseMoveEvent(QMouseEvent *e) {
     // MS1.3
     QPoint mousePos = e->pos();
     QPoint centerPos = QPoint(width() / 2, height() / 2);
-    m_inputs.mouseX = centerPos.x() - mousePos.x() ;
-    m_inputs.mouseY = centerPos.y() - mousePos.y();
-    moveMouseToCenter();
+    if (this->hasFocus()){
+        m_inputs.mouseX = centerPos.x() - mousePos.x();
+        m_inputs.mouseY = centerPos.y() - mousePos.y();
+        moveMouseToCenter();
+    } else {
+        m_inputs.mouseX = 0;
+        m_inputs.mouseY = 0;
+    }
+
 }
 
 void MyGL::mousePressEvent(QMouseEvent *e) {
