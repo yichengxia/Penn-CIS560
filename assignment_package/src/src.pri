@@ -5,6 +5,7 @@ SOURCES += \
     $$PWD/main.cpp \
     $$PWD/mainwindow.cpp \
     $$PWD/mygl.cpp \
+    $$PWD/noise_functions.cpp \
     $$PWD/shaderprogram.cpp \
     $$PWD/drawable.cpp \
     $$PWD/cameracontrolshelp.cpp \
@@ -21,6 +22,7 @@ SOURCES += \
 HEADERS += \
     $$PWD/mainwindow.h \
     $$PWD/mygl.h \
+    $$PWD/noise_functions.h \
     $$PWD/scene/chunkhelpers.h \
     $$PWD/shaderprogram.h \
     $$PWD/drawable.h \
