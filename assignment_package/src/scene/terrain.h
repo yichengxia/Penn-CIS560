@@ -88,7 +88,7 @@ public:
     // based on the Player's proximity to the edge of a Chunk without a neighbor in a particular direction.
     // For milestone 1, when the player is 16 blocks of an edge of a Chunk that does not connect to an existing Chunk,
     // the Terrain should insert a new Chunk into its map and set up its VBOs for rendering.
-    void generateTerrain(int x, int z);
+    void generateTerrain(glm::vec3 pos);
 
     // Initializes the Chunks that store the 64 x 256 x 64 block scene you
     // see when the base code is run.

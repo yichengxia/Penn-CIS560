@@ -94,7 +94,6 @@ void MyGL::resizeGL(int w, int h) {
 // all per-frame actions here, such as performing physics updates on all
 // entities in the scene.
 void MyGL::tick() {
-    m_terrain.generateTerrain(m_player.mcr_position.x, m_player.mcr_position.z);
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
 }
@@ -135,11 +134,9 @@ void MyGL::paintGL() {
 // terrain that surround the player (refer to Terrain::m_generatedTerrain
 // for more info)
 void MyGL::renderTerrain() {
-    int minX = 16 * (glm::floor(this->m_player.mcr_position.x / 16.f) - 1);
-    int maxX = 16 * (glm::floor(this->m_player.mcr_position.x / 16.f) + 2);
-    int minZ = 16 * (glm::floor(this->m_player.mcr_position.z / 16.f) - 1);
-    int maxZ = 16 * (glm::floor(this->m_player.mcr_position.z / 16.f) + 2);
-    m_terrain.draw(minX, maxX, minZ, maxZ, &m_progLambert);
+    m_terrain.generateTerrain(m_player.mcr_position);
+    auto chunkX = glm::floor(m_player.mcr_position.x / 16.f) * 16, chunkZ = glm::floor(m_player.mcr_position.z / 16.f) * 16;
+    m_terrain.draw(chunkX - 64, chunkX + 65, chunkZ - 64, chunkZ + 65, &m_progLambert);
 }
 
 

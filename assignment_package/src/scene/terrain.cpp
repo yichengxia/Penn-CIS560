@@ -137,7 +137,14 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         auto &chunkWest = m_chunks[toKey(x - 16, z)];
         cPtr->linkNeighbor(chunkWest, XNEG);
     }
-    return cPtr;
+    // Populate blocks by x, z coordinates
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 16; j++) {
+            glm::vec2 pos(i + x, j + z);
+
+        }
+    }
+    cPtr->createVBOdata();
     return cPtr;
 }
 
@@ -145,18 +152,12 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
 // it draws each Chunk with the given ShaderProgram, remembering to set the
 // model matrix to the proper X and Z translation!
 void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram) {
-    for(int x = minX; x < maxX; x += 16) {
-        for(int z = minZ; z < maxZ; z += 16) {
-            if (hasChunkAt(x, z)) {
-                // Insert a new Chunk into its map and set up its VBOs for rendering
-                const uPtr<Chunk> &chunk = getChunkAt(x, z);
-                glm::mat4 modelMatrix = glm::mat4(1.f);
-                modelMatrix[3][0] = x;
-                modelMatrix[3][2] = z;
-                shaderProgram->setModelMatrix(modelMatrix);
-                chunk->createVBOdata();
-                shaderProgram->drawInterleaved(*chunk.get());
-            }
+    for (int x = minX; x < maxX; x += 16) {
+        for (int z = minZ; z < maxZ; z += 16) {
+            // Insert a new Chunk into its map and set up its VBOs for rendering
+            const uPtr<Chunk> &chunk = getChunkAt(x, z);
+            shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
+            shaderProgram->drawInterleaved(*chunk);
         }
     }
 }
@@ -165,21 +166,14 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
 // based on the Player's proximity to the edge of a Chunk without a neighbor in a particular direction.
 // For milestone 1, when the player is 16 blocks of an edge of a Chunk that does not connect to an existing Chunk,
 // the Terrain should insert a new Chunk into its map and set up its VBOs for rendering.
-void Terrain::generateTerrain(int x, int z) {
-    if (!hasChunkAt(x, z)) {
-        instantiateChunkAt(x, z);
-    }
-    if (!hasChunkAt(x - 16, z)) {
-        instantiateChunkAt(x - 16, z);
-    }
-    if (!hasChunkAt(x, z + 16)) {
-        instantiateChunkAt(x, z + 16);
-    }
-    if (!hasChunkAt(x + 16, z)) {
-        instantiateChunkAt(x + 16, z);
-    }
-    if (!hasChunkAt(x, z - 16)) {
-        instantiateChunkAt(x, z - 16);
+void Terrain::generateTerrain(glm::vec3 pos) {
+    auto chunkX = glm::floor(pos.x / 16.f) * 16, chunkZ = glm::floor(pos.z / 16.f) * 16;
+    for (int x = chunkX - 64; x < chunkX + 65; x += 16) {
+        for (int z = chunkZ - 64; z < chunkZ + 65; z += 16) {
+            if (m_chunks.count(toKey(x, z)) == 0) {
+                instantiateChunkAt(x, z);
+            }
+        }
     }
 }
 

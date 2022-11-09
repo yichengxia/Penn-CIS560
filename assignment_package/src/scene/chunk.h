@@ -26,15 +26,13 @@ private:
     std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
     // Helper function that check if BlockType is empty
     bool isOpaque(BlockType t);
-    // Helper function that takes in a vector of interleaved vertex data and a vector of index data,
-    // and buffers them into the appropriate VBOs of Drawable
-    void bufferVBOdata(std::vector<glm::vec4> interleaved, std::vector<int> idx);
+    // Helper function to get block color
+    glm::vec4 getColor(BlockType t);
 
 public:
-    explicit Chunk(OpenGLContext* mp_context);
+    Chunk(OpenGLContext* mp_context);
     BlockType getBlockAt(unsigned int x, unsigned int y, unsigned int z) const;
     BlockType getBlockAt(int x, int y, int z) const;
-    BlockType getBlockAt(glm::vec3 pos) const;
     void setBlockAt(unsigned int x, unsigned int y, unsigned int z, BlockType t);
     void linkNeighbor(uPtr<Chunk>& neighbor, Direction dir);
     virtual void createVBOdata() override;
