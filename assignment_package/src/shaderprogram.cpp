@@ -250,7 +250,7 @@ void ShaderProgram::drawInterleaved(Drawable &d) {
 
     if (attrNor != -1 && d.bindNor()) {
         context->glEnableVertexAttribArray(attrNor);
-        context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) sizeof(glm::vec4));
+        context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) sizeof(glm::vec4));
     }
 
     if (attrCol != -1 && d.bindCol()) {
