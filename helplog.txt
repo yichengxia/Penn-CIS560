@@ -4,3 +4,5 @@ Yicheng Xia:
 TA Wenqing Wang helped me understand the general ideas of chunk and terrain classes.
 
 Yilin Guo: did not receive external help.
+
+Shiwei Ge: Only receive help from class recordings.
