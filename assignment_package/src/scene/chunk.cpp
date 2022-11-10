@@ -1,5 +1,8 @@
 #include "chunk.h"
 
+VertexData::VertexData(const glm::vec4 &p, const glm::vec2 &u) : pos(p), uv(u) {}
+
+BlockFace::BlockFace(Direction dir, const glm::vec3 &dirV, const std::array<VertexData, 4> &v) : direction(dir), directionVec(dirV), vertices(v) {}
 
 Chunk::Chunk(OpenGLContext* mp_context) : Drawable(mp_context), m_blocks(), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}
 {
@@ -48,38 +51,36 @@ glm::vec4 Chunk::getColor(BlockType t) {
         case EMPTY:
             return glm::vec4(0.f, 0.f, 0.f, 0.f);
         case GRASS:
-            return glm::vec4(95.f, 159.f, 53.f, 0.f) / 255.f;
+            return glm::vec4(95.f, 159.f, 53.f, 1.f) / 255.f;
         case DIRT:
-            return glm::vec4(121.f, 85.f, 58.f, 0.f) / 255.f;
+            return glm::vec4(121.f, 85.f, 58.f, 1.f) / 255.f;
         case STONE:
-            return glm::vec4(0.5f, 0.5f, 0.5f, 0.f);
+            return glm::vec4(0.5f, 0.5f, 0.5f, 1.f);
         case WATER:
-            return glm::vec4(0.f, 0.f, 0.75f, 0.f);
+            return glm::vec4(0.f, 0.f, 0.75f, 1.f);
         case SNOW:
-            return glm::vec4(1.f, 1.f, 1.f, 0.f);
+            return glm::vec4(1.f, 1.f, 1.f, 1.f);
         default:
             // Other block types are not yet handled, so we default to debug purple
-            return glm::vec4(1.f, 0.f, 1.f, 0.f);
+            return glm::vec4(1.f, 0.f, 1.f, 1.f);
     }
 }
 
 void Chunk::createVBOdata() {
     // Initialize vectors to store buffer and indices
     std::vector<glm::vec4> buf;
-    std::vector<int> idx;
+    std::vector<GLuint> idx;
 
     unsigned count = 0;
     for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
-            for (int y = 0; y < 16; y++) {
+            for (int y = 0; y < 256; y++) {
                 BlockType currType = getBlockAt(x, y, z);
                 if (isOpaque(currType)) {
                     for (auto &&neighborFace : adjacentFaces) {
                         bool canRender = false;
                         glm::vec3 nextPos{x + neighborFace.directionVec.x, y + neighborFace.directionVec.y, z + neighborFace.directionVec.z};
-                        if ((nextPos.x < 0 || nextPos.x >= 16) ||
-                            (nextPos.y < 0 || nextPos.y >= 256) ||
-                            (nextPos.z < 0 || nextPos.z >= 16) ||
+                        if ((nextPos.x < 0 || nextPos.x >= 16) || (nextPos.y < 0 || nextPos.y >= 256) || (nextPos.z < 0 || nextPos.z >= 16) ||
                             !isOpaque(getBlockAt(static_cast<unsigned>(nextPos.x), static_cast<unsigned>(nextPos.y), static_cast<unsigned>(nextPos.z)))) {
                             canRender = true;
                         }

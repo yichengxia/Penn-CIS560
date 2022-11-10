@@ -11,7 +11,7 @@ MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this),
-      m_terrain(this), m_player(glm::vec3(48.f, 148.f, 48.f), m_terrain),
+      m_terrain(this), m_player(glm::vec3(48.f, 188.f, 48.f), m_terrain),
       m_prevFrameTime(QDateTime::currentMSecsSinceEpoch())
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
@@ -73,6 +73,9 @@ void MyGL::initializeGL()
     // using multiple VAOs, we can just bind one once.
     glBindVertexArray(vao);
 
+    // We do not render the faces inside the terrain
+    glEnable(GL_CULL_FACE);
+
     m_terrain.CreateTestScene();
 }
 
@@ -100,6 +103,7 @@ void MyGL::tick() {
     float dT = (currFrameTime - m_prevFrameTime) * 0.1f;
     m_inputs.focused = this->hasFocus();
     m_player.tick(dT, m_inputs);
+    // The terrain expansion function generateTerrain(glm::vec3 pos) will be called inside update()
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
     m_prevFrameTime = currFrameTime;

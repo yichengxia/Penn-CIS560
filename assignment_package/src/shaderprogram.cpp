@@ -246,17 +246,17 @@ void ShaderProgram::drawInterleaved(Chunk &c) {
     if (c.bindPos()) {
         if (attrPos != -1) {
             context->glEnableVertexAttribArray(attrPos);
-            context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 12 * sizeof(glm::vec4), (void*) 0);
+            context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) 0);
         }
 
         if (attrNor != -1) {
             context->glEnableVertexAttribArray(attrNor);
-            context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 12 * sizeof(glm::vec4), (void*) (4 * sizeof(glm::vec4)));
+            context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) (sizeof(glm::vec4)));
         }
 
         if (attrCol != -1) {
             context->glEnableVertexAttribArray(attrCol);
-            context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 12 * sizeof(glm::vec4), (void*) (8 * sizeof(glm::vec4)));
+            context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) (2 * sizeof(glm::vec4)));
         }
     }
 

@@ -8,11 +8,7 @@ Terrain::Terrain(OpenGLContext *context)
     : m_chunks(), m_generatedTerrain(), mp_context(context)
 {}
 
-Terrain::~Terrain() {
-    for (std::pair<const long long int, uPtr<Chunk>> &c : m_chunks) {
-        c.second->destroyVBOdata();
-    }
-}
+Terrain::~Terrain() {}
 
 // Combine two 32-bit ints into one 64-bit int
 // where the upper 32 bits are X and the lower 32 bits are Z
@@ -142,7 +138,17 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) {
             glm::vec2 pos(i + x, j + z);
-
+            int height = (grasslandValue(pos) + mountainValue(pos)) / 2;
+            for (int y = 0; y < height; y++) {
+                cPtr->setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
+            }
+            if (height > 138) {
+                cPtr->setBlockAt(i, height, j, SNOW);
+            } else {
+                for (int y = height; y <= 138; y++) {
+                    cPtr->setBlockAt(i, y, j, WATER);
+                }
+            }
         }
     }
     cPtr->createVBOdata();
@@ -152,8 +158,8 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
 // TODO: When you make Chunk inherit from Drawable, change this code so
 // it draws each Chunk with the given ShaderProgram, remembering to set the
 // model matrix to the proper X and Z translation!
-void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram) {
-    for (int x = minX; x < maxX; x += 16) {
+void Terrain::draw(int minX, int mai, int minZ, int maxZ, ShaderProgram *shaderProgram) {
+    for (int x = minX; x < mai; x += 16) {
         for (int z = minZ; z < maxZ; z += 16) {
             // Insert a new Chunk into its map and set up its VBOs for rendering
             const uPtr<Chunk> &chunk = getChunkAt(x, z);
@@ -194,66 +200,4 @@ void Terrain::CreateTestScene()
     // the "generated terrain zone" at (0,0)
     // now exists.
     m_generatedTerrain.insert(toKey(0, 0));
-
-    // Create grass mountain
-    for(int x = 0; x < 32; ++x) {
-        for(int z = 0; z < 64; ++z) {
-            int height = mountainValue(vec2(x,z));
-            for(int k = 0; k <= height; k++) {
-                if(k < height) {
-                    if(k > 128) {
-                        setBlockAt(x,k,z, GRASS);
-                    } else {
-                        setBlockAt(x,k,z,STONE);
-                    }
-                } else {
-                    setBlockAt(x,k,z,SNOW);
-                }
-                if(k >= 128 && k <= 138 && getBlockAt(vec3(x,k,z)) == EMPTY) {
-                    setBlockAt(x,k,z,WATER);
-                }
-            }
-        }
-    }
-    // Create Grassland
-    for(int x = 32; x < 64; ++x) {
-        for(int z = 0; z < 64; ++z) {
-            int height = grasslandValue(vec2(x,z));
-            for(int k = 0; k <= height; k++) {
-                if(k < height) {
-                    if(k <= 128) {
-                        setBlockAt(x,k,z,STONE);
-                    } else {
-                        setBlockAt(x,k,z,DIRT);
-                    }
-                } else {
-                    setBlockAt(x,k,z,GRASS);
-                }
-
-            }
-        }
-    }
-    // fill water
-    for(int x = 0; x < 64; x++) {
-        for(int z = 0; z < 64; z++) {
-            for(int k = 128; k <= 138; k++) {
-                auto t = getBlockAt(x,k,z);
-                if(t == EMPTY) {
-                    setBlockAt(x,k,z, WATER);
-                }
-            }
-        }
-    }
-
-    // Add "walls" for collision testing
-//    for(int x = 0; x < 64; ++x) {
-//        setBlockAt(x, 129, 0, GRASS);
-//        setBlockAt(x, 130, 0, GRASS);
-//        setBlockAt(x, 129, 63, GRASS);
-//        setBlockAt(0, 130, x, GRASS);
-//    }
-    // Add a central column
-    for(int y = 129; y < 140; ++y) {
-        setBlockAt(32, y, 32, GRASS);
-    }
 }
