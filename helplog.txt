@@ -1,2 +1,6 @@
 MS1
+Yicheng Xia:
+2022-11-3 10:30am, Wenqing Wang's office hour:
+TA Wenqing Wang helped me understand the general ideas of chunk and terrain classes.
+
 Yilin Guo: did not receive external help.
