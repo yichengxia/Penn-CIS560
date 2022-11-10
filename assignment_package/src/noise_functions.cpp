@@ -27,7 +27,7 @@ float grasslandValue(vec2 uv) {
 
     float fbmNoise = fractalPerlin(uv, 8);
 
-    return (worley * 0.33f + fbmNoise * 0.67f) * 32.f + 115.f;
+    return (worley * 0.33f + fbmNoise * 0.67f) * 32.f + 118.f;
 }
 
 float islandValue(vec2 uv) {
