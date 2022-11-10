@@ -60,6 +60,8 @@ glm::vec4 Chunk::getColor(BlockType t) {
             return glm::vec4(0.f, 0.f, 0.75f, 1.f);
         case SNOW:
             return glm::vec4(1.f, 1.f, 1.f, 1.f);
+        case BRONZE:
+            return glm::vec4(0.5f,0.2f,0.f,1.f);
         default:
             // Other block types are not yet handled, so we default to debug purple
             return glm::vec4(1.f, 0.f, 1.f, 1.f);
