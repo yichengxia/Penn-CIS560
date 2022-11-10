@@ -134,23 +134,43 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         auto &chunkWest = m_chunks[toKey(x - 16, z)];
         cPtr->linkNeighbor(chunkWest, XNEG);
     }
-    // Populate blocks by x, z coordinates
-    for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 16; j++) {
-            glm::vec2 pos(i + x, j + z);
-            int height = (grasslandValue(pos) + mountainValue(pos)) / 2;
-            for (int y = 0; y < height; y++) {
-                cPtr->setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
+
+    int isGrassLand = rand()%2;
+    if(isGrassLand) {
+        // Populate blocks by x, z coordinates
+        for (int i = 0; i < 16; i++) {
+            for (int j = 0; j < 16; j++) {
+                glm::vec2 pos(i + x, j + z);
+                int height = grasslandValue(pos);
+                for (int y = 0; y < height; y++) {
+                    cPtr->setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
+                }
+                setBlockAt(i,height,j,GRASS);
+                if(height < 138) {
+                    for(int y = height+1; y <= 138; y++) {
+                        setBlockAt(i,y,j,WATER);
+                    }
+                }
             }
-            if (height > 138) {
-                cPtr->setBlockAt(i, height, j, SNOW);
-            } else {
-                for (int y = height; y <= 138; y++) {
-                    cPtr->setBlockAt(i, y, j, WATER);
+        }
+    } else {
+        // mountain Biome
+        for (int i = 0; i < 16; i++) {
+            for (int j = 0; j < 16; j++) {
+                glm::vec2 pos(i + x, j + z);
+                int height = mountainValue(pos);
+                for (int y = 0; y < height; y++) {
+                    cPtr->setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
+                }
+                setBlockAt(i,height,j,BRONZE);
+                if(height>200) {
+                    setBlockAt(i,height,j,SNOW);
                 }
             }
         }
     }
+
+
     cPtr->createVBOdata();
     return cPtr;
 }
