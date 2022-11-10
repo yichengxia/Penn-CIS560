@@ -7,14 +7,14 @@ Player::Player(glm::vec3 pos, Terrain &terrain)
       m_camera(pos + glm::vec3(0, 1.5, 0)),
       m_cameraOrientation(glm::vec2(0, 0)),
       mcr_terrain(terrain),
-      m_maxVelocity(glm::vec3(0.15)), m_minVelocity(glm::vec3(-0.15)),
+      m_maxVelocity(glm::vec3(15)), m_minVelocity(glm::vec3(-15)),
       inFlightMode(true), isFlyingUp(false),
-      Acceleration(glm::vec3(0.005)),
-      Friction(glm::vec3(-0.002)),
-      Gravity(-0.0055),
-      MaxVelocity(glm::vec3(0.15)), MinVelocity(glm::vec3(-0.15)),
+      Acceleration(glm::vec3(20)),
+      Friction(glm::vec3(-10)),
+      Gravity(-30),
+      MaxVelocity(glm::vec3(15)), MinVelocity(glm::vec3(-15)),
       FlightModeHeight(139.f), MaxFlightHeight(255.f), MinFlightHeight(0.f),
-      FlyUpAcceleration(0.01), JumpVelocity(0.2),
+      FlyUpAcceleration(20), JumpVelocity(10),
       mcr_camera(m_camera)
 {}
 
@@ -169,7 +169,11 @@ void Player::moveAlongVectorWithCollisions(glm::vec3 dir) {
             glm::ivec3 out_blockHit, prevCell;
             bool isBlocked = gridMarch(rayOrigin, rayDirection, mcr_terrain, &outdist, &out_blockHit, &prevCell);
             if (isBlocked) {
-                dir[axis] = glm::sign(dir[axis]) * (glm::min(outdist, glm::abs(dir[axis])) - 0.0001f);
+                if (outdist > 0.001f) {
+                    dir[axis] = glm::sign(dir[axis]) * (std::fmax(glm::min(glm::abs(dir[axis]), outdist) - 0.0001f, 0));
+                } else {
+                    dir[axis] = 0;
+                }
                 m_velocity[axis] = 0;
             }
         }
@@ -257,6 +261,9 @@ void Player::removeBlock() {
     bool isBlocked = gridMarch(m_camera.mcr_position, 3.f * m_forward, mcr_terrain, &outdist, &out_blockHit, &prevCell);
     if (isBlocked) {
         mcr_terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z, EMPTY);
+        const uPtr<Chunk> &c = mcr_terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
+        c->destroyVBOdata();
+        c->createVBOdata();
     }
 }
 
@@ -266,6 +273,9 @@ void Player::placeBlock() {
     bool isBlocked = gridMarch(m_camera.mcr_position, 3.f * m_forward, mcr_terrain, &outdist, &out_blockHit, &prevCell);
     if (isBlocked) {
         mcr_terrain.setBlockAt(prevCell.x, prevCell.y, prevCell.z, STONE);
+        const uPtr<Chunk> &c = mcr_terrain.getChunkAt(prevCell.x, prevCell.z);
+        c->destroyVBOdata();
+        c->createVBOdata();
     }
 }
 
