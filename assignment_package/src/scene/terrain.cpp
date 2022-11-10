@@ -5,12 +5,10 @@
 #include "noise_functions.h"
 
 Terrain::Terrain(OpenGLContext *context)
-    : m_chunks(), m_generatedTerrain(), m_geomCube(context), mp_context(context)
+    : m_chunks(), m_generatedTerrain(), mp_context(context)
 {}
 
-Terrain::~Terrain() {
-    m_geomCube.destroyVBOdata();
-}
+Terrain::~Terrain() {}
 
 // Combine two 32-bit ints into one 64-bit int
 // where the upper 32 bits are X and the lower 32 bits are Z
@@ -116,7 +114,7 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
 }
 
 Chunk* Terrain::instantiateChunkAt(int x, int z) {
-    uPtr<Chunk> chunk = mkU<Chunk>();
+    uPtr<Chunk> chunk = mkU<Chunk>(mp_context);
     Chunk *cPtr = chunk.get();
     m_chunks[toKey(x, z)] = move(chunk);
     // Set the neighbor pointers of itself and its neighbors
@@ -136,65 +134,59 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         auto &chunkWest = m_chunks[toKey(x - 16, z)];
         cPtr->linkNeighbor(chunkWest, XNEG);
     }
-    return cPtr;
+    // Populate blocks by x, z coordinates
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 16; j++) {
+            glm::vec2 pos(i + x, j + z);
+            int height = (grasslandValue(pos) + mountainValue(pos)) / 2;
+            for (int y = 0; y < height; y++) {
+                cPtr->setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
+            }
+            if (height > 138) {
+                cPtr->setBlockAt(i, height, j, SNOW);
+            } else {
+                for (int y = height; y <= 138; y++) {
+                    cPtr->setBlockAt(i, y, j, WATER);
+                }
+            }
+        }
+    }
+    cPtr->createVBOdata();
     return cPtr;
 }
 
 // TODO: When you make Chunk inherit from Drawable, change this code so
 // it draws each Chunk with the given ShaderProgram, remembering to set the
 // model matrix to the proper X and Z translation!
-void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram) {
-    m_geomCube.clearOffsetBuf();
-    m_geomCube.clearColorBuf();
-
-    std::vector<glm::vec3> offsets, colors;
-
-    for(int x = minX; x < maxX; x += 16) {
-        for(int z = minZ; z < maxZ; z += 16) {
+void Terrain::draw(int minX, int mai, int minZ, int maxZ, ShaderProgram *shaderProgram) {
+    for (int x = minX; x < mai; x += 16) {
+        for (int z = minZ; z < maxZ; z += 16) {
+            // Insert a new Chunk into its map and set up its VBOs for rendering
             const uPtr<Chunk> &chunk = getChunkAt(x, z);
-            for(int i = 0; i < 16; ++i) {
-                for(int j = 0; j < 256; ++j) {
-                    for(int k = 0; k < 16; ++k) {
-                        BlockType t = chunk->getBlockAt(i, j, k);
+            shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
+            shaderProgram->drawInterleaved(*chunk);
+        }
+    }
+}
 
-                        if(t != EMPTY) {
-                            offsets.push_back(glm::vec3(i+x, j, k+z));
-                            switch(t) {
-                            case GRASS:
-                                colors.push_back(glm::vec3(95.f, 159.f, 53.f) / 255.f);
-                                break;
-                            case DIRT:
-                                colors.push_back(glm::vec3(121.f, 85.f, 58.f) / 255.f);
-                                break;
-                            case STONE:
-                                colors.push_back(glm::vec3(0.5f));
-                                break;
-                            case WATER:
-                                colors.push_back(glm::vec3(0.f, 0.f, 0.75f));
-                                break;
-                            case SNOW:
-                                colors.push_back(glm::vec3(1.f, 1.f, 1.00f));
-                                break;
-                            default:
-                                // Other block types are not yet handled, so we default to debug purple
-                                colors.push_back(glm::vec3(1.f, 0.f, 1.f));
-                                break;
-                            }
-                        }
-                    }
-                }
+// Checks whether a new Chunk should be added to the Terrain
+// based on the Player's proximity to the edge of a Chunk without a neighbor in a particular direction.
+// For milestone 1, when the player is 16 blocks of an edge of a Chunk that does not connect to an existing Chunk,
+// the Terrain should insert a new Chunk into its map and set up its VBOs for rendering.
+void Terrain::generateTerrain(glm::vec3 pos) {
+    auto chunkX = glm::floor(pos.x / 16.f) * 16, chunkZ = glm::floor(pos.z / 16.f) * 16;
+    for (int x = chunkX - 64; x < chunkX + 65; x += 16) {
+        for (int z = chunkZ - 64; z < chunkZ + 65; z += 16) {
+            if (m_chunks.count(toKey(x, z)) == 0) {
+                instantiateChunkAt(x, z);
             }
         }
     }
-
-    m_geomCube.createInstancedVBOdata(offsets, colors);
-    shaderProgram->drawInstanced(m_geomCube);
 }
 
 void Terrain::CreateTestScene()
 {
     // TODO: DELETE THIS LINE WHEN YOU DELETE m_geomCube!
-    m_geomCube.createVBOdata();
 
     // Create the Chunks that will
     // store the blocks for our
@@ -208,66 +200,4 @@ void Terrain::CreateTestScene()
     // the "generated terrain zone" at (0,0)
     // now exists.
     m_generatedTerrain.insert(toKey(0, 0));
-
-    // Create grass mountain
-    for(int x = 0; x < 32; ++x) {
-        for(int z = 0; z < 64; ++z) {
-            int height = mountainValue(vec2(x,z));
-            for(int k = 0; k <= height; k++) {
-                if(k < height) {
-                    if(k > 128) {
-                        setBlockAt(x,k,z, GRASS);
-                    } else {
-                        setBlockAt(x,k,z,STONE);
-                    }
-                } else {
-                    setBlockAt(x,k,z,SNOW);
-                }
-                if(k >= 128 && k <= 138 && getBlockAt(vec3(x,k,z)) == EMPTY) {
-                    setBlockAt(x,k,z,WATER);
-                }
-            }
-        }
-    }
-    // Create Grassland
-    for(int x = 32; x < 64; ++x) {
-        for(int z = 0; z < 64; ++z) {
-            int height = grasslandValue(vec2(x,z));
-            for(int k = 0; k <= height; k++) {
-                if(k < height) {
-                    if(k <= 128) {
-                        setBlockAt(x,k,z,STONE);
-                    } else {
-                        setBlockAt(x,k,z,DIRT);
-                    }
-                } else {
-                    setBlockAt(x,k,z,GRASS);
-                }
-
-            }
-        }
-    }
-    // fill water
-    for(int x = 0; x < 64; x++) {
-        for(int z = 0; z < 64; z++) {
-            for(int k = 128; k <= 138; k++) {
-                auto t = getBlockAt(x,k,z);
-                if(t == EMPTY) {
-                    setBlockAt(x,k,z, WATER);
-                }
-            }
-        }
-    }
-
-    // Add "walls" for collision testing
-//    for(int x = 0; x < 64; ++x) {
-//        setBlockAt(x, 129, 0, GRASS);
-//        setBlockAt(x, 130, 0, GRASS);
-//        setBlockAt(x, 129, 63, GRASS);
-//        setBlockAt(0, 130, x, GRASS);
-//    }
-    // Add a central column
-//    for(int y = 129; y < 140; ++y) {
-//        setBlockAt(32, y, 32, GRASS);
-//    }
 }

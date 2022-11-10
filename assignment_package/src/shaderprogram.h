@@ -1,6 +1,7 @@
 #ifndef SHADERPROGRAM_H
 #define SHADERPROGRAM_H
 
+#include "scene/chunk.h"
 #include <openglcontext.h>
 #include <glm_includes.h>
 #include <glm/glm.hpp>
@@ -41,6 +42,8 @@ public:
     void draw(Drawable &d);
     // Draw the given object to our screen multiple times using instanced rendering
     void drawInstanced(InstancedDrawable &d);
+    // Draw the given object to our screen using interleaved VBOs
+    void drawInterleaved(Chunk &c);
     // Utility function used in create()
     char* textFileRead(const char*);
     // Utility function that prints any shader compilation errors to the console
