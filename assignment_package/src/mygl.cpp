@@ -100,7 +100,7 @@ void MyGL::resizeGL(int w, int h) {
 // entities in the scene.
 void MyGL::tick() {
     qint64 currFrameTime = QDateTime::currentMSecsSinceEpoch();
-    float dT = (currFrameTime - m_prevFrameTime) * 0.1f;
+    float dT = (currFrameTime - m_prevFrameTime) * 0.001f;
     m_inputs.focused = this->hasFocus();
     m_player.tick(dT, m_inputs);
     // The terrain expansion function generateTerrain(glm::vec3 pos) will be called inside update()
