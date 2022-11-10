@@ -145,10 +145,10 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
                 for (int y = 0; y < height; y++) {
                     cPtr->setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
                 }
-                setBlockAt(i,height,j,GRASS);
+                cPtr->setBlockAt(i,height,j,GRASS);
                 if(height < 138) {
                     for(int y = height+1; y <= 138; y++) {
-                        setBlockAt(i,y,j,WATER);
+                        cPtr->setBlockAt(i,y,j,WATER);
                     }
                 }
             }
@@ -162,9 +162,9 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
                 for (int y = 0; y < height; y++) {
                     cPtr->setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
                 }
-                setBlockAt(i,height,j,BRONZE);
+                cPtr->setBlockAt(i,height,j,BRONZE);
                 if(height>200) {
-                    setBlockAt(i,height,j,SNOW);
+                    cPtr->setBlockAt(i,height,j,SNOW);
                 }
             }
         }
