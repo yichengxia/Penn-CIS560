@@ -170,7 +170,6 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         }
     }
 
-
     cPtr->createVBOdata();
     return cPtr;
 }

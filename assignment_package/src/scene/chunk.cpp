@@ -1,9 +1,5 @@
 #include "chunk.h"
 
-VertexData::VertexData(const glm::vec4 &p, const glm::vec2 &u) : pos(p), uv(u) {}
-
-BlockFace::BlockFace(Direction dir, const glm::vec3 &dirV, const std::array<VertexData, 4> &v) : direction(dir), directionVec(dirV), vertices(v) {}
-
 Chunk::Chunk(OpenGLContext* mp_context) : Drawable(mp_context), m_blocks(), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}
 {
     std::fill_n(m_blocks.begin(), 65536, EMPTY);
@@ -69,8 +65,8 @@ glm::vec4 Chunk::getColor(BlockType t) {
 }
 
 void Chunk::createVBOdata() {
-    // Initialize vectors to store buffer and indices
-    std::vector<glm::vec4> buf;
+    // Initialize vectors to store interleaved and indices
+    std::vector<glm::vec4> interleaved;
     std::vector<GLuint> idx;
 
     unsigned count = 0;
@@ -91,11 +87,11 @@ void Chunk::createVBOdata() {
                                 // Store all the per-vertex data in an interleaved format in a single VBO
                                 // (except for indices, which must be stored in a separate buffer)
                                 // position
-                                buf.push_back(glm::vec4(x, y, z, 1) + vd.pos);
+                                interleaved.push_back(glm::vec4(x, y, z, 1) + vd.pos);
                                 // normal
-                                buf.push_back(glm::vec4(neighborFace.directionVec, 0));
+                                interleaved.push_back(glm::vec4(neighborFace.directionVec, 0));
                                 // color
-                                buf.push_back(getColor(currType));
+                                interleaved.push_back(getColor(currType));
                                 count++;
                             }
                             auto i = count - 1;
@@ -118,7 +114,7 @@ void Chunk::createVBOdata() {
 
     generatePos();
     bindPos();
-    mp_context->glBufferData(GL_ARRAY_BUFFER, buf.size() * sizeof(glm::vec4), buf.data(), GL_STATIC_DRAW);
+    mp_context->glBufferData(GL_ARRAY_BUFFER, interleaved.size() * sizeof(glm::vec4), interleaved.data(), GL_STATIC_DRAW);
 
     generateIdx();
     bindIdx();

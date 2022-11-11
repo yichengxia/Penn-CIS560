@@ -235,7 +235,7 @@ void ShaderProgram::drawInstanced(InstancedDrawable &d)
 
 }
 
-// Draw the given object to our screen using interleaved VBOs
+// Draw the given chunk object to our screen using interleaved VBOs
 void ShaderProgram::drawInterleaved(Chunk &c) {
     useMe();
 
