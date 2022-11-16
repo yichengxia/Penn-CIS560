@@ -3,9 +3,10 @@
 #include <stdexcept>
 #include <iostream>
 #include "noise_functions.h"
+#include "chunkworkers.h"
 
 Terrain::Terrain(OpenGLContext *context)
-    : m_chunks(), m_generatedTerrain(), mp_context(context)
+    : m_chunks(), m_generatedTerrain(), mp_context(context), m_chunkCreated(0), m_tryExpansionTimer(0.f)
 {}
 
 Terrain::~Terrain() {}
@@ -114,7 +115,7 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
 }
 
 Chunk* Terrain::instantiateChunkAt(int x, int z) {
-    uPtr<Chunk> chunk = mkU<Chunk>(mp_context);
+    uPtr<Chunk> chunk = mkU<Chunk>(mp_context, x, z);
     Chunk *cPtr = chunk.get();
     m_chunks[toKey(x, z)] = move(chunk);
     // Set the neighbor pointers of itself and its neighbors
@@ -134,43 +135,6 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         auto &chunkWest = m_chunks[toKey(x - 16, z)];
         cPtr->linkNeighbor(chunkWest, XNEG);
     }
-
-    int isGrassLand = rand()%2;
-    if(isGrassLand) {
-        // Populate blocks by x, z coordinates
-        for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 16; j++) {
-                glm::vec2 pos(i + x, j + z);
-                int height = grasslandValue(pos);
-                for (int y = 0; y < height; y++) {
-                    cPtr->setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
-                }
-                cPtr->setBlockAt(i,height,j,GRASS);
-                if(height < 138) {
-                    for(int y = height+1; y <= 138; y++) {
-                        cPtr->setBlockAt(i,y,j,WATER);
-                    }
-                }
-            }
-        }
-    } else {
-        // mountain Biome
-        for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 16; j++) {
-                glm::vec2 pos(i + x, j + z);
-                int height = mountainValue(pos);
-                for (int y = 0; y < height; y++) {
-                    cPtr->setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
-                }
-                cPtr->setBlockAt(i,height,j,BRONZE);
-                if(height>200) {
-                    cPtr->setBlockAt(i,height,j,SNOW);
-                }
-            }
-        }
-    }
-
-    cPtr->createVBOdata();
     return cPtr;
 }
 
@@ -188,21 +152,25 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
     }
 }
 
-// Checks whether a new Chunk should be added to the Terrain
-// based on the Player's proximity to the edge of a Chunk without a neighbor in a particular direction.
-// For milestone 1, when the player is 16 blocks of an edge of a Chunk that does not connect to an existing Chunk,
-// the Terrain should insert a new Chunk into its map and set up its VBOs for rendering.
+// unused in ms2
+//// Checks whether a new Chunk should be added to the Terrain
+//// based on the Player's proximity to the edge of a Chunk without a neighbor in a particular direction.
+//// For milestone 1, when the player is 16 blocks of an edge of a Chunk that does not connect to an existing Chunk,
+//// the Terrain should insert a new Chunk into its map and set up its VBOs for rendering.
 void Terrain::generateTerrain(glm::vec3 pos) {
     auto chunkX = glm::floor(pos.x / 16.f) * 16, chunkZ = glm::floor(pos.z / 16.f) * 16;
     for (int x = chunkX - 64; x < chunkX + 65; x += 16) {
         for (int z = chunkZ - 64; z < chunkZ + 65; z += 16) {
             if (m_chunks.count(toKey(x, z)) == 0) {
-                instantiateChunkAt(x, z);
+                Chunk* c = instantiateChunkAt(x, z);
+                c->fillChunk();
+                c->createVBOdata();
             }
         }
     }
 }
 
+// unused in ms2
 void Terrain::CreateTestScene()
 {
     // TODO: DELETE THIS LINE WHEN YOU DELETE m_geomCube!
@@ -212,11 +180,165 @@ void Terrain::CreateTestScene()
     // initial world space
     for(int x = 0; x < 64; x += 16) {
         for(int z = 0; z < 64; z += 16) {
-            instantiateChunkAt(x, z);
+            Chunk* c = instantiateChunkAt(x, z);
+            c->fillChunk();
+            c->createVBOdata();
         }
     }
     // Tell our existing terrain set that
     // the "generated terrain zone" at (0,0)
     // now exists.
     m_generatedTerrain.insert(toKey(0, 0));
+}
+
+void Terrain::spawnVBOWorker(Chunk* chunkNeedingVBOData) {
+    VBOWorker* worker = new VBOWorker(chunkNeedingVBOData, &m_chunksThatHaveVBOs, &m_chunksThatHaveVBOsLock);
+    QThreadPool::globalInstance()->start(worker);
+}
+
+void Terrain::spawnFBMWorker(int64_t zone) {
+    // For every terrain generation zone in this radius that does not yet exist in
+    // Terrain's m_generatedTerrain, you will spawn a thread to fill that zone's
+    // Chunks with procedural height field BlockType data.
+    // We will designate these threads as BlockTypeWorkers.
+    ivec2 coord = toCoords(zone);
+    std::vector<Chunk*> chunksToFill;
+    for(int x = coord.x; x < coord.x + 64; x += 16) {
+        for(int z = coord.y; z < coord.y + 64; z += 16) {
+            Chunk* c = instantiateChunkAt(x, z);
+            chunksToFill.push_back(c);
+        }
+    }
+    FBMWorker* worker = new FBMWorker(coord.x, coord.y, chunksToFill, &m_chunksThatHaveBlockData, &m_chunksThatHaveBlockDataLock);
+    QThreadPool::globalInstance()->start(worker);
+    m_generatedTerrain.insert(zone); // before the thread or after?
+}
+
+void Terrain::spawnVBOWorkers(const std::unordered_set<Chunk*> &chunksNeedingVBOs) {
+    for (Chunk* c: chunksNeedingVBOs) {
+        spawnVBOWorker(c);
+    }
+}
+
+void Terrain::spawnFBMWorkers(const QSet<int64_t> &zonesToGenerate) {
+    // Spawn worker threads to generate more Chunks
+    for (int64_t zone : zonesToGenerate) {
+        spawnFBMWorker(zone);
+    }
+}
+
+void Terrain::checkThreadResults() {
+    // Send Chunks that have been processed by FBMWorkers
+    // to VBOWorkers for VBO data
+    m_chunksThatHaveBlockDataLock.lock();
+    spawnVBOWorkers(m_chunksThatHaveBlockData);
+    m_chunksThatHaveBlockData.clear();
+    m_chunksThatHaveBlockDataLock.unlock();
+
+    // Collect the Chunks that have been given VBO data
+    // by VBOWorkers and send that VBO data to the GPU
+    m_chunksThatHaveVBOsLock.lock();
+    for (ChunkVBOData &cd : m_chunksThatHaveVBOs) {
+        cd.mp_chunk->create(cd.m_vboDataOpaque, cd.m_idxDataOpaque,
+                            cd.m_vboDataTransparent, cd.m_idxDataTransparent);
+    }
+    m_chunkCreated += m_chunksThatHaveVBOs.size();
+    m_chunksThatHaveVBOs.clear();
+    m_chunksThatHaveVBOsLock.unlock();
+}
+
+QSet<int64_t> Terrain::terrainZonesBorderingZone(glm::ivec2 zone) const {
+    QSet<int64_t> borderingZones;
+    //  a 5x5 set of terrain generation zones centered on the zone
+    for (int i = -(64 * 2); i < (64 * 3); i += 64) {
+        for (int j = -(64 * 2); j < (64 * 3); j += 64) {
+            borderingZones.insert(toKey(zone.x + i, zone.y + j));
+        }
+    }
+    return borderingZones;
+}
+
+bool Terrain::terrainZoneExists(int64_t id) const {
+//    ivec2 coord = toCoords(id);
+//    ivec2 zone(64.f * glm::floor(coord.x / 64.f), 64.f * glm::floor(coord.y / 64.f));
+//    return m_generatedTerrain.count(toKey(zone.x, zone.y));
+    return m_generatedTerrain.count(id);
+}
+
+void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev) {
+    // Find the player's position relative
+    // to their current terrain gen zone
+    ivec2 currZone(64.f * glm::floor(playerPos.x / 64.f), 64.f * glm::floor(playerPos.z / 64.f));
+    ivec2 prevZone(64.f * glm::floor(playerPosPrev.x / 64.f), 64.f * glm::floor(playerPosPrev.z / 64.f));
+    // Determine which terrain zones border our currect position and our previoius position
+    // This *will* include un-generated terrain zones, so we can compare them to our gl...
+    // and know to generate them
+    // ms2.3: todo
+    QSet<int64_t> terrainZonesBorderingCurrPos = terrainZonesBorderingZone(currZone); //(currZone, TE...)?
+    QSet<int64_t> terrainZonesBorderingPrevPos = terrainZonesBorderingZone(prevZone);
+    // Check which terrain zones need to be destroy()ed
+    // by determining which terrain zones were previously in our radius and are not not
+    for (auto id : terrainZonesBorderingPrevPos) {
+        if (!terrainZonesBorderingCurrPos.contains(id)) {
+            ivec2 coord = toCoords(id);
+            for (int x = coord.x; x < coord.x + 64; x += 16) {
+                for (int z = coord.y; z < coord.y + 64; z += 16) {
+                    auto& chunk = getChunkAt(x, z);
+                    chunk->destroyVBOdata(); // destroy()?
+                }
+            }
+        }
+    }
+    // Determine if any terrain zones around our current position need VBO data
+    // Send these to VBOWorkers
+    // DO NOT send zones to workers if they do not exist in our global map
+    // Instead, send these to FBMWorkers.
+    for (auto id : terrainZonesBorderingCurrPos) {
+        // If it exists already AND IS NOT IN PREV SET, send it to a VBOWorker
+        // If it's in the prev set, then it's already been sent to a VBOWorker
+        // at some point, and may even already have VBOs
+        if (terrainZoneExists(id)) {
+            // For every terrain generation zone in this radius that does exist in m_generatedTerrain
+            // check each Chunk it contains and see if it already has VBO data
+            if (!terrainZonesBorderingPrevPos.contains(id)) {
+                // If it does not, then you will spawn another thread
+                // we will designate a VBOWorker to compute the interleaved buffer and index buffer data for that Chunk.
+                ivec2 coord = toCoords(id);
+                for (int x = coord.x; x < coord.x + 64; x += 16) {
+                    for (int z = coord.y; z < coord.y + 64; z += 16) {
+                        auto & chunk = getChunkAt(x, z);
+                        spawnVBOWorker(chunk.get());
+                    }
+                }
+            }
+        } else {
+            // If it does not yet exist, send it to an FBMWorker
+            // This also adds it to the set of generated terrain zones
+            // so we don't try to repeatedly generate it
+            spawnFBMWorker(id);
+        }
+    }
+}
+
+void Terrain::multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, float dT) {
+    m_tryExpansionTimer += dT;
+    // Only check for terrain expansion every second of real time or so
+    if (m_tryExpansionTimer < 0.5f) {
+        return;
+    }
+    tryExpansion(playerPos, playerPosPrev);
+    checkThreadResults();
+    m_tryExpansionTimer = 0.f;
+}
+
+bool Terrain::initialTerrainDoneLoading(glm::vec3 playerInitPos) {
+    return m_chunkCreated >= 25 * 4 * 4;
+//    auto chunkX = glm::floor(playerInitPos.x / 16.f) * 16, chunkZ = glm::floor(playerInitPos.z / 16.f) * 16;
+//    for (int x = chunkX - 64; x < chunkX + 65; x += 16) {
+//        for (int z = chunkZ - 64; z < chunkZ + 65; z += 16) {
+//            Chunk* c = instantiateChunkAt(x, z);
+//            c->setMCount(0);
+//        }
+//    }
+//    return true;
 }

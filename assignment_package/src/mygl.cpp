@@ -5,14 +5,15 @@
 #include <QApplication>
 #include <QKeyEvent>
 #include <QDateTime>
-
+#include <iostream>
 
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this),
       m_terrain(this), m_player(glm::vec3(48.f, 255.f, 48.f), m_terrain),
-      m_prevFrameTime(QDateTime::currentMSecsSinceEpoch())
+      m_prevFrameTime(QDateTime::currentMSecsSinceEpoch()),
+      m_initialTerrainLoaded(false)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
@@ -75,8 +76,6 @@ void MyGL::initializeGL()
 
     // We do not render the faces inside the terrain
     glEnable(GL_CULL_FACE);
-
-    m_terrain.CreateTestScene();
 }
 
 void MyGL::resizeGL(int w, int h) {
@@ -101,12 +100,23 @@ void MyGL::resizeGL(int w, int h) {
 void MyGL::tick() {
     qint64 currFrameTime = QDateTime::currentMSecsSinceEpoch();
     float dT = (currFrameTime - m_prevFrameTime) * 0.001f;
-    m_inputs.focused = this->hasFocus();
-    m_player.tick(dT, m_inputs);
+    if (m_initialTerrainLoaded) {
+        // Have the player update their position and physics
+        m_inputs.focused = this->hasFocus();
+        m_player.tick(dT, m_inputs);
+    }
+    // Check if the terrain should expand
+    // This both checks to see if the player is near the border of existing
+    // terrain AND checks the status of any FBMWorkers that are generating Chunks
+    m_terrain.multithreadedWork(m_player.mcr_position, m_player.mcr_posPrev, dT);
+
     // The terrain expansion function generateTerrain(glm::vec3 pos) will be called inside update()
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
     m_prevFrameTime = currFrameTime;
+    if (!m_initialTerrainLoaded) {
+        m_initialTerrainLoaded = m_terrain.initialTerrainDoneLoading(m_player.mcr_position);
+    }
 }
 
 void MyGL::sendPlayerDataToGUI() const {
@@ -132,7 +142,9 @@ void MyGL::paintGL() {
     m_progLambert.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
 
-    renderTerrain();
+    if (m_initialTerrainLoaded) {
+        renderTerrain();
+    }
 
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());
@@ -145,7 +157,7 @@ void MyGL::paintGL() {
 // terrain that surround the player (refer to Terrain::m_generatedTerrain
 // for more info)
 void MyGL::renderTerrain() {
-    m_terrain.generateTerrain(m_player.mcr_position);
+//    m_terrain.generateTerrain(m_player.mcr_position);
     auto chunkX = glm::floor(m_player.mcr_position.x / 16.f) * 16, chunkZ = glm::floor(m_player.mcr_position.z / 16.f) * 16;
     m_terrain.draw(chunkX - 64, chunkX + 65, chunkZ - 64, chunkZ + 65, &m_progLambert);
 }

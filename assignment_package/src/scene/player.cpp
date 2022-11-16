@@ -15,13 +15,14 @@ Player::Player(glm::vec3 pos, Terrain &terrain)
       MaxVelocity(glm::vec3(15)), MinVelocity(glm::vec3(-15)),
       FlightModeHeight(139.f), MaxFlightHeight(255.f), MinFlightHeight(0.f),
       FlyUpAcceleration(20), JumpVelocity(10),
-      mcr_camera(m_camera)
+      mcr_camera(m_camera), mcr_posPrev(pos)
 {}
 
 Player::~Player()
 {}
 
 void Player::tick(float dT, InputBundle &input) {
+    mcr_posPrev = mcr_position;
     processInputs(input);
     computePhysics(dT, mcr_terrain);
 }

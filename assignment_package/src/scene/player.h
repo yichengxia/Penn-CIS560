@@ -27,6 +27,7 @@ public:
     // Readonly public reference to our camera
     // for easy access from MyGL
     const Camera& mcr_camera;
+    glm::vec3 mcr_posPrev;
 
     Player(glm::vec3 pos, Terrain &terrain);
     virtual ~Player() override;
