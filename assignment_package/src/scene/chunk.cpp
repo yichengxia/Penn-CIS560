@@ -1,6 +1,15 @@
 #include "chunk.h"
+#include "noise_functions.h"
+#include <iostream>
 
-Chunk::Chunk(OpenGLContext* mp_context) : Drawable(mp_context), m_blocks(), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}
+Chunk::Chunk(OpenGLContext* mp_context) : Drawable(mp_context), m_blocks(), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}, m_vboData(this)
+{
+    std::fill_n(m_blocks.begin(), 65536, EMPTY);
+}
+
+Chunk::Chunk(OpenGLContext* mp_context, int x, int z) :
+    Drawable(mp_context), m_blocks(), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}},
+    m_pos(glm::ivec2(x, z)), m_vboData(this)
 {
     std::fill_n(m_blocks.begin(), 65536, EMPTY);
 }
@@ -103,20 +112,76 @@ void Chunk::createVBOdata() {
                             idx.push_back(i - 2);
                         }
                     }
+                } else {
+                    // todo: ms2.3 transparent
                 }
             }
         }
     }
 
+    this->m_vboData.m_vboDataOpaque = interleaved;
+//    this->m_vboData.m_vboDataTransparent = ;
+    this->m_vboData.m_idxDataOpaque = idx;
+//    this->m_vboData.m_idxDataTransparent = ;
+}
+
+void Chunk::fillChunk() {
+    int x = m_pos.x;
+    int z = m_pos.y;
+    int isGrassLand = rand()%2;
+    if(isGrassLand) {
+        // Populate blocks by x, z coordinates
+        for (int i = 0; i < 16; i++) {
+            for (int j = 0; j < 16; j++) {
+                glm::vec2 pos(i + x, j + z);
+                int height = grasslandValue(pos);
+                for (int y = 0; y < height; y++) {
+                    setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
+                }
+                setBlockAt(i,height,j,GRASS);
+                if(height < 138) {
+                    for(int y = height+1; y <= 138; y++) {
+                        setBlockAt(i,y,j,WATER);
+                    }
+                }
+            }
+        }
+    } else {
+        // mountain Biome
+        for (int i = 0; i < 16; i++) {
+            for (int j = 0; j < 16; j++) {
+                glm::vec2 pos(i + x, j + z);
+                int height = mountainValue(pos);
+                for (int y = 0; y < height; y++) {
+                    setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
+                }
+                setBlockAt(i,height,j,BRONZE);
+                if(height>200) {
+                    setBlockAt(i,height,j,SNOW);
+                }
+            }
+        }
+    }
+}
+
+void Chunk::create(std::vector<glm::vec4> m_vboDataOpaque, std::vector<GLuint> m_idxDataOpaque,
+            std::vector<glm::vec4> m_vboDataTransparent, std::vector<GLuint> m_idxDataTransparent) {
+    // ms2.3: todo
     // Takes in a vector of interleaved vertex data and a vector of index data,
     // and buffers them into the appropriate VBOs of Drawable
-    m_count = idx.size();
+    m_count = m_idxDataOpaque.size();
+//    std::cout << "m_count is " << m_count << std::endl;
 
     generatePos();
     bindPos();
-    mp_context->glBufferData(GL_ARRAY_BUFFER, interleaved.size() * sizeof(glm::vec4), interleaved.data(), GL_STATIC_DRAW);
+    mp_context->glBufferData(GL_ARRAY_BUFFER, m_vboDataOpaque.size() * sizeof(glm::vec4), m_vboDataOpaque.data(), GL_STATIC_DRAW);
 
     generateIdx();
     bindIdx();
-    mp_context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, idx.size() * sizeof(GLuint), idx.data(), GL_STATIC_DRAW);
+    mp_context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_idxDataOpaque.size() * sizeof(GLuint), m_idxDataOpaque.data(), GL_STATIC_DRAW);
+
+}
+
+void Chunk::setMCount(int c) {
+    m_count = c;
 }
