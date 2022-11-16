@@ -8,3 +8,6 @@ TA Aditya Gupta helped our group fix collision detection failure after merging m
 Yilin Guo: did not receive external help.
 
 Shiwei Ge: Only receive help from class recordings.
+
+MS2
+Yilin Guo: Refer to Adam's code showed in class

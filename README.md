@@ -37,3 +37,17 @@ Then alter camera's orientation (only when mouse is focused and the movement is 
 After that, move player based on current velocity and delta-time. If user is not in FlightMode, players' movement is subject to terrain collisions, which is implemented based on grid marching (rayOrigins:12 corners of the Player's collision volume model, rayDirection: forward vector of player).
 
 If user pressed the mouse button, mygl invokes player's removeBlock()/placeBlock() function. These two functions first use grid marching to check if there is a blockHit within 3 units, if yes, then set blockHit as EMPTY/set the last empty block along the rayDirection before blockHit as STONE.
+
+# Milestone 2
+
+## Yilin Guo (Multithreaded Terrain Generation):
+
+Terrain has a multithreadedWork, which is called by MyGL::tick(). In multithreadedWork, every ~0.5 seconds, main thread is going to check for terrain expansion (5x5 set of terrain generation zones centered on the zone in which the Player currently stands). 
+
+For each terrain generation zone in this radius has not yet been generated, spawn a thread to fill that zone's Chunks (FBMWorker). FBMWorker calls noise related functions to fill chunks and store into std::unordered_set<Chunk*> m_chunksThatHaveBlockData in Terrain.
+
+Else, check if each Chunk in this zone already has VBO data. If not, spawn another thread (VBOWorker) to compute the interleaved buffer and index buffer data for each chunk. These data are stored in struct ChunkVBOData, which has four separate std::vectors of opaque and transparent vertex and index data. VBOWorkers push ChunkVBOData they calculated out into std::vector m_chunksThatHaveVBOs stored in Terrain.
+
+Then main thread checks m_chunksThatHaveBlockData by sending filled Chunks to new VBOWorkers, and sending completed VBO data to the GPU.
+
+m_chunksThatHaveBlockData and m_chunksThatHaveVBOs are protected by Mutexs. When subthreads or main thred write to them, they need to get the lock first and release lock after finishing writing.

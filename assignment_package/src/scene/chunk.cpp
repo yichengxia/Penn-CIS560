@@ -1,6 +1,5 @@
 #include "chunk.h"
 #include "noise_functions.h"
-#include <iostream>
 
 Chunk::Chunk(OpenGLContext* mp_context) : Drawable(mp_context), m_blocks(), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}, m_vboData(this)
 {
@@ -113,15 +112,17 @@ void Chunk::createVBOdata() {
                         }
                     }
                 } else {
-                    // todo: ms2.3 transparent
+                    // todo: transparent
                 }
             }
         }
     }
 
+    // opaque
     this->m_vboData.m_vboDataOpaque = interleaved;
-//    this->m_vboData.m_vboDataTransparent = ;
     this->m_vboData.m_idxDataOpaque = idx;
+    // todo: transparent
+//    this->m_vboData.m_vboDataTransparent = ;
 //    this->m_vboData.m_idxDataTransparent = ;
 }
 
@@ -166,11 +167,9 @@ void Chunk::fillChunk() {
 
 void Chunk::create(std::vector<glm::vec4> m_vboDataOpaque, std::vector<GLuint> m_idxDataOpaque,
             std::vector<glm::vec4> m_vboDataTransparent, std::vector<GLuint> m_idxDataTransparent) {
-    // ms2.3: todo
     // Takes in a vector of interleaved vertex data and a vector of index data,
     // and buffers them into the appropriate VBOs of Drawable
     m_count = m_idxDataOpaque.size();
-//    std::cout << "m_count is " << m_count << std::endl;
 
     generatePos();
     bindPos();
@@ -180,6 +179,7 @@ void Chunk::create(std::vector<glm::vec4> m_vboDataOpaque, std::vector<GLuint> m
     bindIdx();
     mp_context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_idxDataOpaque.size() * sizeof(GLuint), m_idxDataOpaque.data(), GL_STATIC_DRAW);
 
+    // todo: transparent
 }
 
 void Chunk::setMCount(int c) {
