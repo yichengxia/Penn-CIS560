@@ -165,6 +165,8 @@ void Terrain::generateTerrain(glm::vec3 pos) {
                 Chunk* c = instantiateChunkAt(x, z);
                 c->fillChunk();
                 c->createVBOdata();
+                c->create(c->m_vboData.m_vboDataOpaque, c->m_vboData.m_idxDataOpaque,
+                          c->m_vboData.m_vboDataTransparent, c->m_vboData.m_idxDataTransparent);
             }
         }
     }
@@ -211,7 +213,7 @@ void Terrain::spawnFBMWorker(int64_t zone) {
     }
     FBMWorker* worker = new FBMWorker(coord.x, coord.y, chunksToFill, &m_chunksThatHaveBlockData, &m_chunksThatHaveBlockDataLock);
     QThreadPool::globalInstance()->start(worker);
-    m_generatedTerrain.insert(zone); // before the thread or after?
+    m_generatedTerrain.insert(zone);
 }
 
 void Terrain::spawnVBOWorkers(const std::unordered_set<Chunk*> &chunksNeedingVBOs) {
@@ -242,26 +244,39 @@ void Terrain::checkThreadResults() {
         cd.mp_chunk->create(cd.m_vboDataOpaque, cd.m_idxDataOpaque,
                             cd.m_vboDataTransparent, cd.m_idxDataTransparent);
     }
-    m_chunkCreated += m_chunksThatHaveVBOs.size();
+    if (m_chunkCreated < 25 * 4 * 4) {
+        m_chunkCreated += m_chunksThatHaveVBOs.size();
+    }
     m_chunksThatHaveVBOs.clear();
     m_chunksThatHaveVBOsLock.unlock();
 }
 
-QSet<int64_t> Terrain::terrainZonesBorderingZone(glm::ivec2 zone) const {
-    QSet<int64_t> borderingZones;
-    //  a 5x5 set of terrain generation zones centered on the zone
-    for (int i = -(64 * 2); i < (64 * 3); i += 64) {
-        for (int j = -(64 * 2); j < (64 * 3); j += 64) {
-            borderingZones.insert(toKey(zone.x + i, zone.y + j));
+QSet<int64_t> Terrain::terrainZonesBorderingZone(glm::ivec2 zone, unsigned int radius, bool onlyCircumference) const {
+    int radiusInZoneScale = static_cast<int>(radius) * 64;
+    QSet<int64_t> result;
+    // Only want to look at terrain zones exactly at our radius
+    if (onlyCircumference) {
+        for (int i = - radiusInZoneScale; i < radiusInZoneScale; i += 64) {
+            // Nx1 to the right
+            result.insert(toKey(zone.x + radiusInZoneScale, zone.y + i));
+            // Nx1 to the left
+            result.insert(toKey(zone.x - radiusInZoneScale, zone.y + i));
+            // Nx1 above
+            result.insert(toKey(zone.x + i, zone.y + radiusInZoneScale));
+            // Nx1 below
+            result.insert(toKey(zone.x + i, zone.y - radiusInZoneScale));
+        }
+    } else {
+        for (int i = -radiusInZoneScale; i <= radiusInZoneScale; i += 64) {
+            for (int j = -radiusInZoneScale; j <= radiusInZoneScale; j += 64) {
+                result.insert(toKey(zone.x + i, zone.y + j));
+            }
         }
     }
-    return borderingZones;
+    return result;
 }
 
 bool Terrain::terrainZoneExists(int64_t id) const {
-//    ivec2 coord = toCoords(id);
-//    ivec2 zone(64.f * glm::floor(coord.x / 64.f), 64.f * glm::floor(coord.y / 64.f));
-//    return m_generatedTerrain.count(toKey(zone.x, zone.y));
     return m_generatedTerrain.count(id);
 }
 
@@ -273,9 +288,8 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev) {
     // Determine which terrain zones border our currect position and our previoius position
     // This *will* include un-generated terrain zones, so we can compare them to our gl...
     // and know to generate them
-    // ms2.3: todo
-    QSet<int64_t> terrainZonesBorderingCurrPos = terrainZonesBorderingZone(currZone); //(currZone, TE...)?
-    QSet<int64_t> terrainZonesBorderingPrevPos = terrainZonesBorderingZone(prevZone);
+    QSet<int64_t> terrainZonesBorderingCurrPos = terrainZonesBorderingZone(currZone, TERRAIN_CREATE_RADIUS, false);
+    QSet<int64_t> terrainZonesBorderingPrevPos = terrainZonesBorderingZone(prevZone, TERRAIN_CREATE_RADIUS, false);
     // Check which terrain zones need to be destroy()ed
     // by determining which terrain zones were previously in our radius and are not not
     for (auto id : terrainZonesBorderingPrevPos) {
@@ -284,7 +298,7 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev) {
             for (int x = coord.x; x < coord.x + 64; x += 16) {
                 for (int z = coord.y; z < coord.y + 64; z += 16) {
                     auto& chunk = getChunkAt(x, z);
-                    chunk->destroyVBOdata(); // destroy()?
+                    chunk->destroyVBOdata();
                 }
             }
         }
@@ -322,7 +336,7 @@ void Terrain::tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev) {
 
 void Terrain::multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, float dT) {
     m_tryExpansionTimer += dT;
-    // Only check for terrain expansion every second of real time or so
+    // Only check for terrain expansion every 0.5 second of real time or so
     if (m_tryExpansionTimer < 0.5f) {
         return;
     }
@@ -331,14 +345,6 @@ void Terrain::multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, fl
     m_tryExpansionTimer = 0.f;
 }
 
-bool Terrain::initialTerrainDoneLoading(glm::vec3 playerInitPos) {
+bool Terrain::initialTerrainDoneLoading() {
     return m_chunkCreated >= 25 * 4 * 4;
-//    auto chunkX = glm::floor(playerInitPos.x / 16.f) * 16, chunkZ = glm::floor(playerInitPos.z / 16.f) * 16;
-//    for (int x = chunkX - 64; x < chunkX + 65; x += 16) {
-//        for (int z = chunkZ - 64; z < chunkZ + 65; z += 16) {
-//            Chunk* c = instantiateChunkAt(x, z);
-//            c->setMCount(0);
-//        }
-//    }
-//    return true;
 }

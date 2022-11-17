@@ -1,7 +1,6 @@
 #include "player.h"
 #include <QString>
-#include <iostream>
-#include "glm/gtx/string_cast.hpp"
+
 Player::Player(glm::vec3 pos, Terrain &terrain)
     : Entity(pos), m_velocity(0,0,0), m_acceleration(0,0,0),
       m_camera(pos + glm::vec3(0, 1.5, 0)),
@@ -265,6 +264,8 @@ void Player::removeBlock() {
         const uPtr<Chunk> &c = mcr_terrain.getChunkAt(out_blockHit.x, out_blockHit.z);
         c->destroyVBOdata();
         c->createVBOdata();
+        c->create(c->m_vboData.m_vboDataOpaque, c->m_vboData.m_idxDataOpaque,
+                  c->m_vboData.m_vboDataTransparent, c->m_vboData.m_idxDataTransparent);
     }
 }
 
@@ -277,6 +278,8 @@ void Player::placeBlock() {
         const uPtr<Chunk> &c = mcr_terrain.getChunkAt(prevCell.x, prevCell.z);
         c->destroyVBOdata();
         c->createVBOdata();
+        c->create(c->m_vboData.m_vboDataOpaque, c->m_vboData.m_idxDataOpaque,
+                  c->m_vboData.m_vboDataTransparent, c->m_vboData.m_idxDataTransparent);
     }
 }
 

@@ -12,6 +12,8 @@
 
 //using namespace std;
 
+#define TERRAIN_CREATE_RADIUS 2
+
 // Helper functions to convert (x, z) to and from hash map key
 int64_t toKey(int x, int z);
 glm::ivec2 toCoords(int64_t k);
@@ -70,7 +72,7 @@ private:
     void spawnFBMWorker(int64_t zone);
     void checkThreadResults();
     void tryExpansion(glm::vec3 playerPos, glm::vec3 playerPosPrev);
-    QSet<int64_t> terrainZonesBorderingZone(glm::ivec2 zone) const;
+    QSet<int64_t> terrainZonesBorderingZone(glm::ivec2 zone, unsigned int radius, bool onlyCircumference) const;
     bool terrainZoneExists(int64_t) const;
 
 public:
@@ -113,7 +115,7 @@ public:
     // Initializes the Chunks that store the 64 x 256 x 64 block scene you
     // see when the base code is run.
     void CreateTestScene();
-    bool initialTerrainDoneLoading(glm::vec3 playerInitPos);
+    bool initialTerrainDoneLoading();
     void multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, float dT);
 
 };

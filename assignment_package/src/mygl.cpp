@@ -5,7 +5,6 @@
 #include <QApplication>
 #include <QKeyEvent>
 #include <QDateTime>
-#include <iostream>
 
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
@@ -100,11 +99,9 @@ void MyGL::resizeGL(int w, int h) {
 void MyGL::tick() {
     qint64 currFrameTime = QDateTime::currentMSecsSinceEpoch();
     float dT = (currFrameTime - m_prevFrameTime) * 0.001f;
-    if (m_initialTerrainLoaded) {
-        // Have the player update their position and physics
-        m_inputs.focused = this->hasFocus();
-        m_player.tick(dT, m_inputs);
-    }
+    // Have the player update their position and physics
+    m_inputs.focused = this->hasFocus();
+    m_player.tick(dT, m_inputs);
     // Check if the terrain should expand
     // This both checks to see if the player is near the border of existing
     // terrain AND checks the status of any FBMWorkers that are generating Chunks
@@ -115,7 +112,7 @@ void MyGL::tick() {
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
     m_prevFrameTime = currFrameTime;
     if (!m_initialTerrainLoaded) {
-        m_initialTerrainLoaded = m_terrain.initialTerrainDoneLoading(m_player.mcr_position);
+        m_initialTerrainLoaded = m_terrain.initialTerrainDoneLoading();
     }
 }
 
@@ -157,7 +154,6 @@ void MyGL::paintGL() {
 // terrain that surround the player (refer to Terrain::m_generatedTerrain
 // for more info)
 void MyGL::renderTerrain() {
-//    m_terrain.generateTerrain(m_player.mcr_position);
     auto chunkX = glm::floor(m_player.mcr_position.x / 16.f) * 16, chunkZ = glm::floor(m_player.mcr_position.z / 16.f) * 16;
     m_terrain.draw(chunkX - 64, chunkX + 65, chunkZ - 64, chunkZ + 65, &m_progLambert);
 }
