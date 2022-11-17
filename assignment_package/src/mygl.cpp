@@ -9,9 +9,11 @@
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this),
-      m_progLambert(this), m_progFlat(this), m_progInstanced(this),
-      m_terrain(this), m_player(glm::vec3(48.f, 255.f, 48.f), m_terrain),
-      m_prevFrameTime(QDateTime::currentMSecsSinceEpoch()),
+      m_progLambert(this), m_progFlat(this), m_progInstanced(this),m_progPost(this),
+      m_terrain(this), m_player(glm::vec3(48.f, 200.f, 48.f), m_terrain),
+      m_prevFrameTime(QDateTime::currentMSecsSinceEpoch()),m_quad(this),
+      m_frameBuffer(this, this->width(), this->height(),
+                    this->devicePixelRatio()),
       m_initialTerrainLoaded(false)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
@@ -45,6 +47,8 @@ void MyGL::initializeGL()
     // Set a few settings/modes in OpenGL rendering
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LINE_SMOOTH);
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     // Set the color with which the screen is filled at the start of each render call.
     glClearColor(0.37f, 0.74f, 1.0f, 1);
@@ -56,23 +60,24 @@ void MyGL::initializeGL()
 
     //Create the instance of the world axes
     m_worldAxes.createVBOdata();
+    m_quad.createVBOdata();
 
     // Create and set up the diffuse shader
     m_progLambert.create(":/glsl/lambert.vert.glsl", ":/glsl/lambert.frag.glsl");
     // Create and set up the flat lighting shader
     m_progFlat.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
     m_progInstanced.create(":/glsl/instanced.vert.glsl", ":/glsl/lambert.frag.glsl");
-
+    m_progPost.create(":/glsl/post.vert.glsl", ":/glsl/post.frag.glsl");
     // Set a color with which to draw geometry.
     // This will ultimately not be used when you change
     // your program to render Chunks with vertex colors
     // and UV coordinates
     m_progLambert.setGeometryColor(glm::vec4(0,1,0,1));
-
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
     glBindVertexArray(vao);
-
+    m_frameBuffer.create();
+    m_frameBuffer.bindFrameBuffer();
     // We do not render the faces inside the terrain
     glEnable(GL_CULL_FACE);
 }
@@ -87,7 +92,10 @@ void MyGL::resizeGL(int w, int h) {
 
     m_progLambert.setViewProjMatrix(viewproj);
     m_progFlat.setViewProjMatrix(viewproj);
-
+    m_frameBuffer.resize(this->width(), this->height(),
+                         this->devicePixelRatio());
+    m_frameBuffer.destroy();
+    m_frameBuffer.create();
     printGLErrorLog();
 }
 
@@ -133,6 +141,10 @@ void MyGL::sendPlayerDataToGUI() const {
 // so paintGL() called at a rate of 60 frames per second.
 void MyGL::paintGL() {
     // Clear the screen so that we only see newly drawn images
+    m_frameBuffer.bindFrameBuffer();
+    glViewport(0, 0, this->width() * this->devicePixelRatio(),
+               this->height() * this->devicePixelRatio());
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
@@ -141,8 +153,45 @@ void MyGL::paintGL() {
 
     if (m_initialTerrainLoaded) {
         renderTerrain();
+        glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
+
+        glViewport(0, 0, this->width() * this->devicePixelRatio(),
+                   this->height() * this->devicePixelRatio());
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        m_frameBuffer.bindToTextureSlot(1);
+        if (m_terrain.getBlockAt(m_player.mcr_position+glm::vec3(0,1.5,0)) == WATER) {
+            // 1 is for under water visual effects
+            m_progPost.setUCase(1);
+        } else if (m_terrain.getBlockAt(m_player.mcr_position+glm::vec3(0,1.5,0)) == LAVA) {
+            // 2 for lava
+            m_progPost.setUCase(2);
+        } else {
+            // any other number will be normal
+            m_progPost.setUCase(0);
+        }
+        m_progPost.draw(m_quad,1);
     }
 
+
+//    if(m_terrain.hasChunkAt(m_player.mcr_position.x,m_player.mcr_position.z)) {
+//        glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
+
+//        glViewport(0, 0, this->width() * this->devicePixelRatio(),
+//                   this->height() * this->devicePixelRatio());
+//        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//        m_frameBuffer.bindToTextureSlot(1);
+//        if (m_terrain.getBlockAt(m_player.mcr_position+glm::vec3(0,1.5,0)) == WATER) {
+//            // 1 is for under water visual effects
+//            m_progPost.setUCase(1);
+//        } else if (m_terrain.getBlockAt(m_player.mcr_position+glm::vec3(0,1.5,0)) == LAVA) {
+//            // 2 for lava
+//            m_progPost.setUCase(2);
+//        } else {
+//            // any other number will be normal
+//            m_progPost.setUCase(0);
+//        }
+//        m_progPost.draw(m_quad,1);
+//    }
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());

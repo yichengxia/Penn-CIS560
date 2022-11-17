@@ -5,5 +5,7 @@
         <file>glsl/flat.frag.glsl</file>
         <file>glsl/flat.vert.glsl</file>
         <file>glsl/instanced.vert.glsl</file>
+        <file>glsl/post.vert.glsl</file>
+        <file>glsl/post.frag.glsl</file>
     </qresource>
 </RCC>

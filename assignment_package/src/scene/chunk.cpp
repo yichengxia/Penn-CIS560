@@ -66,6 +66,10 @@ glm::vec4 Chunk::getColor(BlockType t) {
             return glm::vec4(1.f, 1.f, 1.f, 1.f);
         case BRONZE:
             return glm::vec4(0.5f,0.2f,0.f,1.f);
+        case LAVA:
+            return glm::vec4(0.9f,0.0f,0.3f,1.f);
+        case BEDROCK:
+            return glm::vec4(0.6f,0.5f,0.5f,1.f);
         default:
             // Other block types are not yet handled, so we default to debug purple
             return glm::vec4(1.f, 0.f, 1.f, 1.f);
@@ -130,39 +134,53 @@ void Chunk::fillChunk() {
     int x = m_pos.x;
     int z = m_pos.y;
     int isGrassLand = rand()%2;
-    if(isGrassLand) {
         // Populate blocks by x, z coordinates
-        for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 16; j++) {
-                glm::vec2 pos(i + x, j + z);
-                int height = grasslandValue(pos);
-                for (int y = 0; y < height; y++) {
-                    setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
-                }
-                setBlockAt(i,height,j,GRASS);
-                if(height < 138) {
-                    for(int y = height+1; y <= 138; y++) {
-                        setBlockAt(i,y,j,WATER);
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 16; j++) {
+            glm::vec2 pos(i + x, j + z);
+            glm::vec2 eleMoi = eleMoiValue(pos/128.f);
+            setBlockAt(i,0,j,BEDROCK);
+            for (int y = 1; y <= 95; y++) {
+                if (perlinNoise(glm::vec3(x + i, y, z + j) / 10.f) > 0) {
+                    setBlockAt(i, y, j, STONE);
+                } else {
+                    if (y < 25) {
+                        setBlockAt(i, y, j, LAVA);
+                    } else {
+                        setBlockAt(i, y, j, EMPTY);
                     }
                 }
             }
-        }
-    } else {
-        // mountain Biome
-        for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 16; j++) {
-                glm::vec2 pos(i + x, j + z);
-                int height = mountainValue(pos);
-                for (int y = 0; y < height; y++) {
+            int height = glm::mix(grasslandValue(pos), mountainValue(pos), eleMoi[0]);
+            if (eleMoi[0] > 0.3) {
+                for (int y = 96; y <= height; ++y) {
+                    if (y <= 128) {
+                        setBlockAt(i, y, j, STONE);
+                    } else if (y < 200 || y < height) {
+                        setBlockAt(i, y, j,
+                                   random1(glm::vec2(i, y)) < 0.9 ? STONE
+                                                                       : DIRT);
+                    } else {
+                        setBlockAt(i, y, j, SNOW);
+                    }
+                }
+            } else {
+                for (int y = 96; y < height; y++) {
                     setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
                 }
-                setBlockAt(i,height,j,BRONZE);
-                if(height>200) {
-                    setBlockAt(i,height,j,SNOW);
+                if (height > 138) {
+                    setBlockAt(i, height, j, GRASS);
+                } else {
+                    for (int y = height; y <= 138; y++) {
+                        setBlockAt(i, y, j, WATER);
+                    }
                 }
             }
+
         }
     }
+
+
 }
 
 void Chunk::create(std::vector<glm::vec4> m_vboDataOpaque, std::vector<GLuint> m_idxDataOpaque,

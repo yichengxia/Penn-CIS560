@@ -51,3 +51,6 @@ Else, check if each Chunk in this zone already has VBO data. If not, spawn anoth
 Then main thread checks m_chunksThatHaveBlockData by sending filled Chunks to new VBOWorkers, and sending completed VBO data to the GPU.
 
 m_chunksThatHaveBlockData and m_chunksThatHaveVBOs are protected by Mutexs. When subthreads or main thred write to them, they need to get the lock first and release lock after finishing writing.
+
+## Shiwei Ge (Cave System):
+To implement the caves I created a new Perlin Noise function. This function took in a 3 vector instead of a 2 vector and used 8 surflets instead of 4. I used a decently large grid size to acheive this affect. I also created two new blocks, lava and bedrock. Lava is seen in pools at the bottom of caves and bedrock is seen at the very bottom layer of caves. The player will move more slowly when moving through either lava or water. The player will also sink in both of these.

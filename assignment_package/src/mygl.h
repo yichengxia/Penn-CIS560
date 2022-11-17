@@ -7,7 +7,8 @@
 #include "scene/camera.h"
 #include "scene/terrain.h"
 #include "scene/player.h"
-
+#include "framebuffer.h"
+#include "scene/quad.h"
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShaderProgram>
 #include <smartpointerhelp.h>
@@ -21,6 +22,7 @@ private:
     ShaderProgram m_progLambert;// A shader program that uses lambertian reflection
     ShaderProgram m_progFlat;// A shader program that uses "flat" reflection (no shadowing at all)
     ShaderProgram m_progInstanced;// A shader program that is designed to be compatible with instanced rendering
+    ShaderProgram m_progPost;
 
     GLuint vao; // A handle for our vertex array object. This will store the VBOs created in our geometry classes.
                 // Don't worry too much about this. Just know it is necessary in order to render geometry.
@@ -32,6 +34,9 @@ private:
     QTimer m_timer; // Timer linked to tick(). Fires approximately 60 times per second.
     qint64 m_prevFrameTime; // previous frame's currentMSecsSinceEpoch
     bool m_initialTerrainLoaded;
+
+    Quad m_quad;
+    FrameBuffer m_frameBuffer;
 
     void moveMouseToCenter(); // Forces the mouse position to the screen's center. You should call this
                               // from within a mouse move event after reading the mouse movement so that

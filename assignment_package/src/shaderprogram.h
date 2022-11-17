@@ -20,11 +20,22 @@ public:
     int attrNor; // A handle for the "in" vec4 representing vertex normal in the vertex shader
     int attrCol; // A handle for the "in" vec4 representing vertex color in the vertex shader
     int attrPosOffset; // A handle for a vec3 used only in the instanced rendering shader
+    int attrUV; // A handle for the "in" vec2 representing the UV coordinates in
+                // the vertex shader
+    int attrAnim; // A handle for a float representing whether to use animation
 
     int unifModel; // A handle for the "uniform" mat4 representing model matrix in the vertex shader
     int unifModelInvTr; // A handle for the "uniform" mat4 representing inverse transpose of the model matrix in the vertex shader
     int unifViewProj; // A handle for the "uniform" mat4 representing combined projection and view matrices in the vertex shader
     int unifColor; // A handle for the "uniform" vec4 representing color of geometry in the vertex shader
+
+    int unifSampler; // A handle for the "uniform" GLuint representing sampler
+    int unifTime;    // A handle for the "uniform" GLuint representing time
+    int unifCase; // A handle for the "uniform" int representing the post render
+                  // type 0 no post 1 water 2 lava;
+    int unifSampler2D; // A handle to the "uniform" sampler2D that will be used
+                       // to
+                       // read the texture containing the scene render
 
 public:
     ShaderProgram(OpenGLContext* context);
@@ -40,6 +51,10 @@ public:
     void setGeometryColor(glm::vec4 color);
     // Draw the given object to our screen using this ShaderProgram's shaders
     void draw(Drawable &d);
+    void draw(Drawable &d, int textureSlot);
+    void setUCase(int Ucase);
+    // Pass the given sampler to this shader on the GPU
+    void setSampler(GLuint sampler);
     // Draw the given object to our screen multiple times using instanced rendering
     void drawInstanced(InstancedDrawable &d);
     // Draw the given object to our screen using interleaved VBOs
