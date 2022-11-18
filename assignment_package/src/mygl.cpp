@@ -172,26 +172,6 @@ void MyGL::paintGL() {
         m_progPost.draw(m_quad,1);
     }
 
-
-//    if(m_terrain.hasChunkAt(m_player.mcr_position.x,m_player.mcr_position.z)) {
-//        glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
-
-//        glViewport(0, 0, this->width() * this->devicePixelRatio(),
-//                   this->height() * this->devicePixelRatio());
-//        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//        m_frameBuffer.bindToTextureSlot(1);
-//        if (m_terrain.getBlockAt(m_player.mcr_position+glm::vec3(0,1.5,0)) == WATER) {
-//            // 1 is for under water visual effects
-//            m_progPost.setUCase(1);
-//        } else if (m_terrain.getBlockAt(m_player.mcr_position+glm::vec3(0,1.5,0)) == LAVA) {
-//            // 2 for lava
-//            m_progPost.setUCase(2);
-//        } else {
-//            // any other number will be normal
-//            m_progPost.setUCase(0);
-//        }
-//        m_progPost.draw(m_quad,1);
-//    }
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
