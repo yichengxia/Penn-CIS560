@@ -238,3 +238,29 @@ float worleyNoise2Point(vec2 uv, float *cellHeight) {
     float finalOutput = -1 * minDist1 + minDist2;
     return finalOutput;
 }
+
+float noise1D( glm::vec2 p ) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float interpNoise2D(glm::vec2 xy) {
+    float x = xy.x;
+    float y = xy.y;
+    int intX = int(floor(x));
+    float fractX = fract(x);
+    int intY = int(floor(y));
+    float fractY = fract(y);
+
+    float v1 = noise1D(vec2(intX, intY));
+    float v2 = noise1D(vec2(intX + 1, intY));
+    float v3 = noise1D(vec2(intX, intY + 1));
+    float v4 = noise1D(vec2(intX + 1, intY + 1));
+
+    float i1 = mix(v1, v2, fractX);
+    float i2 = mix(v3, v4, fractX);
+    return mix(i1, i2, fractY);
+}
+
+vec2 eleMoiValue(vec2 uv) {
+    return vec2(clamp(0.f,1.f,fbm(uv,3)-0.2f), clamp(0.f,1.f,fbm(uv + vec2(-1000, 1024),3)+0.3f));
+}

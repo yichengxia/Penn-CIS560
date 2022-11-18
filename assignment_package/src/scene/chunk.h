@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <cstddef>
 #include <vector>
+#include "noise_functions.h"
 
 class Chunk;
 

@@ -8,8 +8,9 @@
 
 ShaderProgram::ShaderProgram(OpenGLContext *context)
     : vertShader(), fragShader(), prog(),
-      attrPos(-1), attrNor(-1), attrCol(-1),
-      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),
+      attrPos(-1), attrNor(-1), attrCol(-1), attrUV(-1),attrAnim(-1),
+      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),unifSampler(-1), unifTime(-1),
+      unifCase(-1),
       context(context)
 {}
 
@@ -64,6 +65,8 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     attrPos = context->glGetAttribLocation(prog, "vs_Pos");
     attrNor = context->glGetAttribLocation(prog, "vs_Nor");
     attrCol = context->glGetAttribLocation(prog, "vs_Col");
+    attrUV = context->glGetAttribLocation(prog, "vs_UV");
+    attrAnim = context->glGetAttribLocation(prog, "vs_Anim");
     if(attrCol == -1) attrCol = context->glGetAttribLocation(prog, "vs_ColInstanced");
     attrPosOffset = context->glGetAttribLocation(prog, "vs_OffsetInstanced");
 
@@ -71,6 +74,9 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     unifModelInvTr = context->glGetUniformLocation(prog, "u_ModelInvTr");
     unifViewProj   = context->glGetUniformLocation(prog, "u_ViewProj");
     unifColor      = context->glGetUniformLocation(prog, "u_Color");
+    unifSampler = context->glGetUniformLocation(prog, "u_Texture");
+    unifTime = context->glGetUniformLocation(prog, "u_Time");
+    unifCase = context->glGetUniformLocation(prog, "u_Case");
 }
 
 void ShaderProgram::useMe()
@@ -108,6 +114,14 @@ void ShaderProgram::setModelMatrix(const glm::mat4 &model)
     }
 }
 
+void ShaderProgram::setSampler(GLuint sampler) {
+    useMe();
+    context->glActiveTexture(GL_TEXTURE0);
+    if (unifSampler != -1) {
+        context->glUniform1i(unifSampler, sampler);
+    }
+}
+
 void ShaderProgram::setViewProjMatrix(const glm::mat4 &vp)
 {
     // Tell OpenGL to use this shader program for subsequent function calls
@@ -135,6 +149,8 @@ void ShaderProgram::setGeometryColor(glm::vec4 color)
         context->glUniform4fv(unifColor, 1, &color[0]);
     }
 }
+
+
 
 //This function, as its name implies, uses the passed in GL widget
 void ShaderProgram::draw(Drawable &d)
@@ -177,6 +193,41 @@ void ShaderProgram::draw(Drawable &d)
     if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
     if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
     if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
+
+    context->printGLErrorLog();
+}
+
+void ShaderProgram::draw(Drawable &d, int textureSlot) {
+    useMe();
+
+    // Set our "renderedTexture" sampler to user Texture Unit 0
+    context->glUniform1i(unifSampler, textureSlot);
+
+    // Each of the following blocks checks that:
+    //   * This shader has this attribute, and
+    //   * This Drawable has a vertex buffer for this attribute.
+    // If so, it binds the appropriate buffers to each attribute.
+
+    if (attrPos != -1 && d.bindPos()) {
+        context->glEnableVertexAttribArray(attrPos);
+        context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 0, NULL);
+    }
+    if (attrUV != -1 && d.bindUV()) {
+        context->glEnableVertexAttribArray(attrUV);
+        context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 0, NULL);
+    }
+
+    // Bind the index buffer and then draw shapes from it.
+    // This invokes the shader program, which accesses the vertex buffers.
+    d.bindIdx();
+    context->glDrawElements(d.drawMode(), d.elemCount(), GL_UNSIGNED_INT, 0);
+
+    if (attrPos != -1) {
+        context->glDisableVertexAttribArray(attrPos);
+    }
+    if (attrUV != -1) {
+        context->glDisableVertexAttribArray(attrUV);
+    }
 
     context->printGLErrorLog();
 }
@@ -290,6 +341,13 @@ char* ShaderProgram::textFileRead(const char* fileName) {
         }
     }
     return text;
+}
+
+void ShaderProgram::setUCase(int Ucase) {
+    useMe();
+    if (unifCase != -1) {
+        context->glUniform1i(unifCase, Ucase);
+    }
 }
 
 QString ShaderProgram::qTextFileRead(const char *fileName)

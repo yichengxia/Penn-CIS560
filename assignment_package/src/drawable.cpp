@@ -2,7 +2,7 @@
 #include <glm_includes.h>
 
 Drawable::Drawable(OpenGLContext* context)
-    : m_count(-1), m_bufIdx(), m_bufPos(), m_bufNor(), m_bufCol(),
+    : m_count(-1), m_bufIdx(), m_bufPos(), m_bufNor(), m_bufCol(),m_bufuv(),
       m_idxGenerated(false), m_posGenerated(false), m_norGenerated(false), m_colGenerated(false),
       mp_context(context)
 {}
@@ -65,6 +65,12 @@ void Drawable::generateCol()
     mp_context->glGenBuffers(1, &m_bufCol);
 }
 
+void Drawable::generateUV()
+{
+    m_uvGenerated = true;
+    mp_context->glGenBuffers(1, &m_bufuv);
+}
+
 bool Drawable::bindIdx()
 {
     if(m_idxGenerated) {
@@ -96,6 +102,15 @@ bool Drawable::bindCol()
     }
     return m_colGenerated;
 }
+
+bool Drawable::bindUV()
+{
+    if(m_uvGenerated){
+        mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufuv);
+    }
+    return m_uvGenerated;
+}
+
 
 InstancedDrawable::InstancedDrawable(OpenGLContext *context)
     : Drawable(context), m_numInstances(0), m_bufPosOffset(-1), m_offsetGenerated(false)

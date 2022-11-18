@@ -38,3 +38,5 @@ float mountainValue(vec2 uv);
 float grasslandValue(vec2 uv);
 float islandValue(vec2 uv);
 float riverNoise(vec2 uv);
+
+vec2 eleMoiValue(vec2 uv);
