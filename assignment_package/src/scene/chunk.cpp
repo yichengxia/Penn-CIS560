@@ -46,7 +46,7 @@ void Chunk::linkNeighbor(uPtr<Chunk> &neighbor, Direction dir) {
 
 // Helper function that check if BlockType is empty
 bool Chunk::isOpaque(BlockType t) {
-    return t != EMPTY;
+    return t != EMPTY && t != WATER && t!= LAVA;
 }
 
 // Helper function to get block color
@@ -65,69 +65,114 @@ glm::vec4 Chunk::getColor(BlockType t) {
         case SNOW:
             return glm::vec4(1.f, 1.f, 1.f, 1.f);
         case BRONZE:
-            return glm::vec4(0.5f,0.2f,0.f,1.f);
+            return glm::vec4(0.5f, 0.2f, 0.f, 1.f);
         case LAVA:
-            return glm::vec4(0.9f,0.0f,0.3f,1.f);
+            return glm::vec4(0.9f, 0.0f, 0.3f, 1.f);
         case BEDROCK:
-            return glm::vec4(0.6f,0.5f,0.5f,1.f);
+            return glm::vec4(0.6f, 0.5f, 0.5f, 1.f);
         default:
             // Other block types are not yet handled, so we default to debug purple
             return glm::vec4(1.f, 0.f, 1.f, 1.f);
     }
 }
 
+int Chunk::elemCount2() {
+    return m_count2;
+}
+
+void Chunk::generateIdx2() {
+    m_idx2Generated = true;
+    mp_context->glGenBuffers(1, &m_bufIdx2);
+}
+
+void Chunk::generatePos2() {
+    m_pos2Generated = true;
+    mp_context->glGenBuffers(1, &m_bufPos2);
+}
+
+bool Chunk::bindIdx2() {
+    if (m_idx2Generated) {
+        mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdx2);
+    }
+    return m_idx2Generated;
+}
+
+bool Chunk::bindPos2() {
+    if (m_pos2Generated) {
+        mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufPos2);
+    }
+    return m_pos2Generated;
+}
+
 void Chunk::createVBOdata() {
     // Initialize vectors to store interleaved and indices
-    std::vector<glm::vec4> interleaved;
-    std::vector<GLuint> idx;
+    std::vector<glm::vec4> interleaved, interleaved2;
+    std::vector<GLuint> idx, idx2;
 
-    unsigned count = 0;
+    unsigned count = 0, count2 = 0;
     for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
             for (int y = 0; y < 256; y++) {
                 BlockType currType = getBlockAt(x, y, z);
-                if (isOpaque(currType)) {
+                if (currType != EMPTY) {
+                    auto &&bufUsing = isOpaque(currType) ? interleaved : interleaved2;
+                    auto &&idxUsing = isOpaque(currType) ? idx : idx2;
+                    auto &&countUsing = isOpaque(currType) ? count : count2;
                     for (auto &&neighborFace : adjacentFaces) {
-                        bool canRender = false;
-                        glm::vec3 nextPos{x + neighborFace.directionVec.x, y + neighborFace.directionVec.y, z + neighborFace.directionVec.z};
-                        if ((nextPos.x < 0 || nextPos.x >= 16) || (nextPos.y < 0 || nextPos.y >= 256) || (nextPos.z < 0 || nextPos.z >= 16) ||
-                            !isOpaque(getBlockAt(static_cast<unsigned>(nextPos.x), static_cast<unsigned>(nextPos.y), static_cast<unsigned>(nextPos.z)))) {
-                            canRender = true;
-                        }
-                        if (canRender) {
+                        bool canRender = y == 0 || y == 256;
+                        if (!canRender) {
+                            glm::ivec3 nextPos{x + neighborFace.directionVec.x, y + neighborFace.directionVec.y, z + neighborFace.directionVec.z};
+                            auto nextChunk = this;
+                            if (nextPos.x >= 16) {
+                                nextPos.x = 0;
+                                nextChunk = m_neighbors[XPOS];
+                            } else if (nextPos.x < 0) {
+                                nextPos.x = 15;
+                                nextChunk = m_neighbors[XNEG];
+                            }
+                            if (nextPos.z >= 16) {
+                                nextPos.z = 0;
+                                nextChunk = m_neighbors[ZPOS];
+                            } else if (nextPos.z < 0) {
+                                nextPos.z = 15;
+                                nextChunk = m_neighbors[ZNEG];
+                            }
+                            if (nextChunk != nullptr) {
+                                auto nextBlock = nextChunk->getBlockAt(nextPos.x, nextPos.y, nextPos.z);
+                                canRender = !isOpaque(nextBlock) && currType != nextBlock;
+                            }
+                        } else {
                             for (auto &&vd : neighborFace.vertices) {
                                 // Store all the per-vertex data in an interleaved format in a single VBO
                                 // (except for indices, which must be stored in a separate buffer)
                                 // position
-                                interleaved.push_back(glm::vec4(x, y, z, 1) + vd.pos);
+                                bufUsing.push_back(glm::vec4(x, y, z, 1) + vd.pos);
                                 // normal
-                                interleaved.push_back(glm::vec4(neighborFace.directionVec, 0));
+                                bufUsing.push_back(glm::vec4(neighborFace.directionVec, 0));
                                 // color
-                                interleaved.push_back(getColor(currType));
-                                count++;
+                                bufUsing.push_back(glm::vec4(uvOffs.at(uvOffs.count(currType) ? currType : ICE)[neighborFace.direction] + vd.uv,
+                                                   currType == WATER || currType == LAVA ? 1 : 0, 0));
+                                countUsing++;
                             }
                             auto i = count - 1;
-                            idx.push_back(i);
-                            idx.push_back(i - 2);
-                            idx.push_back(i - 1);
-                            idx.push_back(i);
-                            idx.push_back(i - 3);
-                            idx.push_back(i - 2);
+                            idxUsing.push_back(i);
+                            idxUsing.push_back(i - 2);
+                            idxUsing.push_back(i - 1);
+                            idxUsing.push_back(i);
+                            idxUsing.push_back(i - 3);
+                            idxUsing.push_back(i - 2);
                         }
                     }
-                } else {
-                    // todo: transparent
                 }
             }
         }
     }
-
     // opaque
     this->m_vboData.m_vboDataOpaque = interleaved;
     this->m_vboData.m_idxDataOpaque = idx;
-    // todo: transparent
-//    this->m_vboData.m_vboDataTransparent = ;
-//    this->m_vboData.m_idxDataTransparent = ;
+    // transparent
+    this->m_vboData.m_vboDataTransparent = interleaved2;
+    this->m_vboData.m_idxDataTransparent = idx2;
 }
 
 void Chunk::fillChunk() {
@@ -179,8 +224,6 @@ void Chunk::fillChunk() {
 
         }
     }
-
-
 }
 
 void Chunk::create(std::vector<glm::vec4> m_vboDataOpaque, std::vector<GLuint> m_idxDataOpaque,
@@ -197,7 +240,16 @@ void Chunk::create(std::vector<glm::vec4> m_vboDataOpaque, std::vector<GLuint> m
     bindIdx();
     mp_context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_idxDataOpaque.size() * sizeof(GLuint), m_idxDataOpaque.data(), GL_STATIC_DRAW);
 
-    // todo: transparent
+    // transparent
+    m_count2 = m_idxDataTransparent.size();
+
+    generatePos2();
+    bindPos2();
+    mp_context->glBufferData(GL_ARRAY_BUFFER, m_vboDataTransparent.size() * sizeof(glm::vec4), m_vboDataTransparent.data(), GL_STATIC_DRAW);
+
+    generateIdx2();
+    bindIdx2();
+    mp_context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_idxDataTransparent.size() * sizeof(GLuint), m_idxDataTransparent.data(), GL_STATIC_DRAW);
 }
 
 void Chunk::setMCount(int c) {

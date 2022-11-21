@@ -32,6 +32,8 @@ private:
     InputBundle m_inputs; // A collection of variables to be updated in keyPressEvent, mouseMoveEvent, mousePressEvent, etc.
 
     QTimer m_timer; // Timer linked to tick(). Fires approximately 60 times per second.
+    GLuint m_renderedTexture; // Handles the rendered texture
+    unsigned m_time; // Counts the time we call paintGL().
     qint64 m_prevFrameTime; // previous frame's currentMSecsSinceEpoch
     bool m_initialTerrainLoaded;
 

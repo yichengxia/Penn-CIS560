@@ -40,6 +40,14 @@ private:
     // These allow us to properly determine
     std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
     glm::ivec2 m_pos;
+    // An alteration to the VBO for the Chunk class,
+    // so that it additionally supports UV coordinates (vec2).
+    int m_count2;
+    GLuint m_bufIdx2;
+    GLuint m_bufPos2;
+    bool m_idx2Generated;
+    bool m_pos2Generated;
+
     // Helper function that check if BlockType is empty
     bool isOpaque(BlockType t);
     // Helper function to get block color
@@ -53,6 +61,14 @@ public:
     BlockType getBlockAt(int x, int y, int z) const;
     void setBlockAt(unsigned int x, unsigned int y, unsigned int z, BlockType t);
     void linkNeighbor(uPtr<Chunk>& neighbor, Direction dir);
+
+    // Functions for an alteration to the VBO for the Chunk class
+    int elemCount2();
+    void generateIdx2();
+    void generatePos2();
+    bool bindIdx2();
+    bool bindPos2();
+
     virtual void createVBOdata() override;
     void fillChunk();
     void create(std::vector<glm::vec4> m_vboDataOpaque, std::vector<GLuint>,

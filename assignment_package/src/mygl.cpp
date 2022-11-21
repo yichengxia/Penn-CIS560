@@ -11,10 +11,10 @@ MyGL::MyGL(QWidget *parent)
       m_worldAxes(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this),m_progPost(this),
       m_terrain(this), m_player(glm::vec3(48.f, 200.f, 48.f), m_terrain),
-      m_prevFrameTime(QDateTime::currentMSecsSinceEpoch()),m_quad(this),
-      m_frameBuffer(this, this->width(), this->height(),
-                    this->devicePixelRatio()),
-      m_initialTerrainLoaded(false)
+      m_renderedTexture(0), m_time(0),
+      m_prevFrameTime(QDateTime::currentMSecsSinceEpoch()),
+      m_initialTerrainLoaded(false), m_quad(this),
+      m_frameBuffer(this, this->width(), this->height(), this->devicePixelRatio())
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
@@ -29,6 +29,8 @@ MyGL::MyGL(QWidget *parent)
 MyGL::~MyGL() {
     makeCurrent();
     glDeleteVertexArrays(1, &vao);
+    m_quad.destroyVBOdata();
+    m_frameBuffer.destroy();
 }
 
 
@@ -47,8 +49,9 @@ void MyGL::initializeGL()
     // Set a few settings/modes in OpenGL rendering
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LINE_SMOOTH);
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // For transparency to work properly for WATER blocks
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     // Set the color with which the screen is filled at the start of each render call.
     glClearColor(0.37f, 0.74f, 1.0f, 1);
@@ -76,10 +79,22 @@ void MyGL::initializeGL()
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
     glBindVertexArray(vao);
+
+    // Load images as textures into OpenGL for the world
+    glGenTextures(1, &m_renderedTexture);
+    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
+    glActiveTexture(GL_TEXTURE0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    QImage img(":/textures/minecraft_textures_all.png");
+    img = (img.convertToFormat(QImage::Format_RGBA8888)).mirrored();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.width(), img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
+    m_progLambert.setSampler(0);
+
     m_frameBuffer.create();
     m_frameBuffer.bindFrameBuffer();
-    // We do not render the faces inside the terrain
-    glEnable(GL_CULL_FACE);
 }
 
 void MyGL::resizeGL(int w, int h) {
@@ -149,6 +164,7 @@ void MyGL::paintGL() {
 
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progLambert.setViewProjMatrix(m_player.mcr_camera.getViewProj());
+    m_progLambert.setTime(m_time++);
     m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
 
     if (m_initialTerrainLoaded) {
@@ -183,6 +199,9 @@ void MyGL::paintGL() {
 // terrain that surround the player (refer to Terrain::m_generatedTerrain
 // for more info)
 void MyGL::renderTerrain() {
+    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
+    glActiveTexture(GL_TEXTURE0);
+//    m_terrain.generateTerrain(m_player.mcr_position);
     auto chunkX = glm::floor(m_player.mcr_position.x / 16.f) * 16, chunkZ = glm::floor(m_player.mcr_position.z / 16.f) * 16;
     m_terrain.draw(chunkX - 64, chunkX + 65, chunkZ - 64, chunkZ + 65, &m_progLambert);
 }

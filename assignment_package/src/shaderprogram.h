@@ -55,10 +55,12 @@ public:
     void setUCase(int Ucase);
     // Pass the given sampler to this shader on the GPU
     void setSampler(GLuint sampler);
+    // Update uniform time
+    void setTime(int time);
     // Draw the given object to our screen multiple times using instanced rendering
     void drawInstanced(InstancedDrawable &d);
     // Draw the given object to our screen using interleaved VBOs
-    void drawInterleaved(Chunk &c);
+    void drawInterleaved(Chunk &c, bool drawOpaque);
     // Utility function used in create()
     char* textFileRead(const char*);
     // Utility function that prints any shader compilation errors to the console

@@ -146,8 +146,23 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
         for (int z = minZ; z < maxZ; z += 16) {
             // Insert a new Chunk into its map and set up its VBOs for rendering
             const uPtr<Chunk> &chunk = getChunkAt(x, z);
+//            if (chunk->elemCount() < 0) {
+//                createChunkAt(x + 16, z);
+//                createChunkAt(x - 16, z);
+//                createChunkAt(x, z + 16);
+//                createChunkAt(x, z - 16);
+//                chunk->createVBOdata();
+//            }
             shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
-            shaderProgram->drawInterleaved(*chunk);
+            shaderProgram->drawInterleaved(*chunk, true);
+        }
+    }
+    for (int x = minX; x < maxX; x += 16) {
+        for (int z = minZ; z < maxZ; z += 16) {
+            // Insert a new Chunk into its map and set up its VBOs for rendering
+            const uPtr<Chunk> &chunk = getChunkAt(x, z);
+            shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
+            shaderProgram->drawInterleaved(*chunk, false);
         }
     }
 }
@@ -161,14 +176,14 @@ void Terrain::generateTerrain(glm::vec3 pos) {
     auto chunkX = glm::floor(pos.x / 16.f) * 16, chunkZ = glm::floor(pos.z / 16.f) * 16;
     for (int x = chunkX - 64; x < chunkX + 65; x += 16) {
         for (int z = chunkZ - 64; z < chunkZ + 65; z += 16) {
-            if (m_chunks.count(toKey(x, z)) == 0) {
-                Chunk* c = instantiateChunkAt(x, z);
-                c->fillChunk();
-                c->createVBOdata();
-                c->create(c->m_vboData.m_vboDataOpaque, c->m_vboData.m_idxDataOpaque,
-                          c->m_vboData.m_vboDataTransparent, c->m_vboData.m_idxDataTransparent);
-            }
+            createChunkAt(x, z);
         }
+    }
+}
+
+void Terrain::createChunkAt(int x, int z) {
+    if (m_chunks.count(toKey(x, z)) == 0) {
+        instantiateChunkAt(x, z);
     }
 }
 

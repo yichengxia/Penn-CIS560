@@ -150,7 +150,12 @@ void ShaderProgram::setGeometryColor(glm::vec4 color)
     }
 }
 
-
+void ShaderProgram::setTime(int time) {
+    useMe();
+    if (unifTime != -1) {
+        context->glUniform1i(unifTime, time);
+    }
+}
 
 //This function, as its name implies, uses the passed in GL widget
 void ShaderProgram::draw(Drawable &d)
@@ -287,34 +292,72 @@ void ShaderProgram::drawInstanced(InstancedDrawable &d)
 }
 
 // Draw the given chunk object to our screen using interleaved VBOs
-void ShaderProgram::drawInterleaved(Chunk &c) {
+void ShaderProgram::drawInterleaved(Chunk &c, bool drawOpaque) {
     useMe();
 
-    if (c.elemCount() < 0) {
-        throw std::out_of_range("Attempting to draw a drawable with m_count of " + std::to_string(c.elemCount()) + "!");
+    if (drawOpaque) {
+        if (c.elemCount() < 0) {
+            throw std::out_of_range("Attempting to draw a drawable with m_count of " + std::to_string(c.elemCount()) + "!");
+        }
+
+        if (c.bindPos()) {
+            if (attrPos != -1) {
+                context->glEnableVertexAttribArray(attrPos);
+                context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) 0);
+            }
+
+            if (attrNor != -1) {
+                context->glEnableVertexAttribArray(attrNor);
+                context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) (sizeof(glm::vec4)));
+            }
+
+            if (attrUV != -1) {
+                context->glEnableVertexAttribArray(attrUV);
+                context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) (2 * sizeof(glm::vec4)));
+            }
+
+            if (attrAnim != -1) {
+                context->glEnableVertexAttribArray(attrAnim);
+                context->glVertexAttribPointer(attrAnim, 1, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void *) (10 * sizeof(float)));
+            }
+        }
+
+        // Bind the index buffer and then draw shapes from it.
+        // This invokes the shader program, which accesses the vertex buffers.
+        c.bindIdx();
+        context->glDrawElements(c.drawMode(), c.elemCount(), GL_UNSIGNED_INT, 0);
+    } else {
+        if (c.elemCount2() < 0) {
+            throw std::out_of_range("Attempting to draw a drawable with m_count2 of " + std::to_string(c.elemCount2()) + "!");
+        }
+
+        if (c.bindPos2()) {
+            if (attrPos != -1) {
+                context->glEnableVertexAttribArray(attrPos);
+                context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) 0);
+            }
+
+            if (attrNor != -1) {
+                context->glEnableVertexAttribArray(attrNor);
+                context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) (sizeof(glm::vec4)));
+            }
+
+            if (attrUV != -1) {
+                context->glEnableVertexAttribArray(attrUV);
+                context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) (2 * sizeof(glm::vec4)));
+            }
+
+            if (attrAnim != -1) {
+                context->glEnableVertexAttribArray(attrAnim);
+                context->glVertexAttribPointer(attrAnim, 1, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void *) (10 * sizeof(float)));
+            }
+        }
+
+        // Bind the index buffer and then draw shapes from it.
+        // This invokes the shader program, which accesses the vertex buffers.
+        c.bindIdx2();
+        context->glDrawElements(c.drawMode(), c.elemCount2(), GL_UNSIGNED_INT, 0);
     }
-
-    if (c.bindPos()) {
-        if (attrPos != -1) {
-            context->glEnableVertexAttribArray(attrPos);
-            context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) 0);
-        }
-
-        if (attrNor != -1) {
-            context->glEnableVertexAttribArray(attrNor);
-            context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) (sizeof(glm::vec4)));
-        }
-
-        if (attrCol != -1) {
-            context->glEnableVertexAttribArray(attrCol);
-            context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*) (2 * sizeof(glm::vec4)));
-        }
-    }
-
-    // Bind the index buffer and then draw shapes from it.
-    // This invokes the shader program, which accesses the vertex buffers.
-    c.bindIdx();
-    context->glDrawElements(c.drawMode(), c.elemCount(), GL_UNSIGNED_INT, 0);
 
     if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
 
