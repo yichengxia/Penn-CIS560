@@ -146,13 +146,6 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
         for (int z = minZ; z < maxZ; z += 16) {
             // Insert a new Chunk into its map and set up its VBOs for rendering
             const uPtr<Chunk> &chunk = getChunkAt(x, z);
-//            if (chunk->elemCount() < 0) {
-//                createChunkAt(x + 16, z);
-//                createChunkAt(x - 16, z);
-//                createChunkAt(x, z + 16);
-//                createChunkAt(x, z - 16);
-//                chunk->createVBOdata();
-//            }
             shaderProgram->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, 0, z)));
             shaderProgram->drawInterleaved(*chunk, true);
         }
