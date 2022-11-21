@@ -3,12 +3,13 @@ Yicheng Xia:
 2022-11-3 10:30am, Wenqing Wang's office hour:
 TA Wenqing Wang helped me understand the general ideas of chunk and terrain classes.
 2022-11-10 3:00pm, Aditya Gupta's office hour:
-TA Aditya Gupta helped our group fix collision detection failure after merging my rendering code. We solved it by calling destroyVBOdata() and regenarate VBOs.
+TA Aditya Gupta helped our group fix collision detection failure after merging my rendering code. We solved it by calling destroyVBOdata() and regenerate VBOs.
 
 Yilin Guo: did not receive external help.
 
 Shiwei Ge: Only receive help from class recordings.
 
 MS2
+Yicheng Xia: Refer to Adam's code showed in class
 Yilin Guo: Refer to Adam's code showed in class
 Shiwei Ge: Refer to Adam's code showed in class
