@@ -40,6 +40,8 @@ If user pressed the mouse button, mygl invokes player's removeBlock()/placeBlock
 
 # Milestone 2
 
+Link: https://drive.google.com/file/d/1s1LMb4LP_DGimg_1N6t-qWyUFKAOoNIq/view?usp=sharing
+
 ## Shiwei Ge (Cave System):
 To implement the caves I created a new Perlin Noise function. This function took in a 3 vector instead of a 2 vector and used 8 surflets instead of 4. I used a decently large grid size to acheive this affect. I also created two new blocks, lava and bedrock. Lava is seen in pools at the bottom of caves and bedrock is seen at the very bottom layer of caves. The player will move more slowly when moving through either lava or water. The player will also sink in both of these.
 
