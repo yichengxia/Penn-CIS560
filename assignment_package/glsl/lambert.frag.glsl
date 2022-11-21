@@ -76,16 +76,7 @@ void main()
 {
     vec2 uv = fs_UV;
     if (fs_Anim != 0) {
-        int frame = int(u_Time / 100.f) % 5;
-        if (frame == 1) {
-            uv += vec2(0.0625f, 0);
-        } else if (frame == 2) {
-            uv += vec2(0.0625f * 2.f, 0);
-        } else if (frame == 3) {
-            uv += vec2(0.0625f, -0.0625f);
-        } else if (frame == 4) {
-            uv += vec2(0.0625f * 2.f, -0.0625f);
-        }
+        uv += vec2((u_Time % 123) / 1234.f, 0);
     }
     // Material base color (before shading)
     vec4 diffuseColor = texture(u_Texture, uv);
