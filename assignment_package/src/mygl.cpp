@@ -156,6 +156,11 @@ void MyGL::sendPlayerDataToGUI() const {
 // so paintGL() called at a rate of 60 frames per second.
 void MyGL::paintGL() {
     // Clear the screen so that we only see newly drawn images
+    glDisable(GL_DEPTH_TEST);
+    m_progFlat.setModelMatrix(glm::mat4());
+    m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
+    m_progFlat.draw(m_worldAxes);
+    glEnable(GL_DEPTH_TEST);
     m_frameBuffer.bindFrameBuffer();
     glViewport(0, 0, this->width() * this->devicePixelRatio(),
                this->height() * this->devicePixelRatio());
@@ -166,6 +171,7 @@ void MyGL::paintGL() {
     m_progLambert.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progLambert.setTime(m_time++);
     m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
+
 
     if (m_initialTerrainLoaded) {
         renderTerrain();
@@ -193,6 +199,7 @@ void MyGL::paintGL() {
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progFlat.draw(m_worldAxes);
     glEnable(GL_DEPTH_TEST);
+
 }
 
 // TODO: Change this so it renders the nine zones of generated
