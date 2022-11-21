@@ -46,7 +46,7 @@ void Chunk::linkNeighbor(uPtr<Chunk> &neighbor, Direction dir) {
 
 // Helper function that check if BlockType is empty
 bool Chunk::isOpaque(BlockType t) {
-    return t != EMPTY && t != WATER && t!= LAVA;
+    return t != EMPTY && t != WATER && t != ICE && t!= LAVA;
 }
 
 // Helper function to get block color
