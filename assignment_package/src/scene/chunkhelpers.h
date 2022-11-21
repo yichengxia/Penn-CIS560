@@ -38,7 +38,7 @@ struct BlockFace {
     BlockFace(Direction dir, const glm::vec3 &dirV, const std::array<VertexData, 4> &v) : direction(dir), directionVec(dirV), vertices(v) {}
 };
 
-#define BLK_UV 0.03125f
+#define BLK_UV 0.0625f
 
 const std::array<BlockFace, 6> adjacentFaces = {
     BlockFace(XPOS, glm::vec3(1, 0, 0),
