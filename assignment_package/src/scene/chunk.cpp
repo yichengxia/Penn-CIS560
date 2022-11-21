@@ -45,6 +45,7 @@ void Chunk::linkNeighbor(uPtr<Chunk> &neighbor, Direction dir) {
 }
 
 // Helper function that check if BlockType is empty
+// Note: LAVA is set to be transparent becaue we want player to swim in it
 bool Chunk::isOpaque(BlockType t) {
     return t != EMPTY && t != WATER && t != ICE && t!= LAVA;
 }
@@ -151,7 +152,7 @@ void Chunk::createVBOdata() {
                                 // normal
                                 bufUsing.push_back(glm::vec4(neighborFace.directionVec, 0));
                                 // color
-                                bufUsing.push_back(glm::vec4(uvOffs.at(uvOffs.count(currType) ? currType : ICE)[neighborFace.direction] + vd.uv,
+                                bufUsing.push_back(glm::vec4(uvs.at(uvs.count(currType) ? currType : ICE)[neighborFace.direction] + vd.uv,
                                                    currType == WATER || currType == LAVA ? 1 : 0, 0));
                                 countUsing++;
                             }
@@ -215,7 +216,11 @@ void Chunk::fillChunk() {
                     setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
                 }
                 if (height > 138) {
-                    setBlockAt(i, height, j, GRASS);
+                    if (height <= 148) {
+                        setBlockAt(i, height, j, ICE);
+                    } else {
+                        setBlockAt(i, height, j, GRASS);
+                    }
                 } else {
                     for (int y = height; y <= 138; y++) {
                         setBlockAt(i, y, j, WATER);

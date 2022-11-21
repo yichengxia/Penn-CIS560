@@ -78,7 +78,7 @@ const std::array<BlockFace, 6> adjacentFaces = {
                VertexData({1, 1, 0, 0}, {0, BLK_UV})}),
 };
 
-const std::unordered_map<BlockType, std::array<glm::vec2, 6>> uvOffs {
+const std::unordered_map<BlockType, std::array<glm::vec2, 6>> uvs {
     {GRASS, {glm::vec2(3.f * BLK_UV, 15.f * BLK_UV),
              glm::vec2(3.f * BLK_UV, 15.f * BLK_UV),
              glm::vec2(8.f * BLK_UV, 13.f * BLK_UV),
