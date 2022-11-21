@@ -141,7 +141,8 @@ void Chunk::createVBOdata() {
                                 auto nextBlock = nextChunk->getBlockAt(nextPos.x, nextPos.y, nextPos.z);
                                 canRender = !isOpaque(nextBlock) && currType != nextBlock;
                             }
-                        } else {
+                        }
+                        if (canRender) {
                             for (auto &&vd : neighborFace.vertices) {
                                 // Store all the per-vertex data in an interleaved format in a single VBO
                                 // (except for indices, which must be stored in a separate buffer)
@@ -154,7 +155,7 @@ void Chunk::createVBOdata() {
                                                    currType == WATER || currType == LAVA ? 1 : 0, 0));
                                 countUsing++;
                             }
-                            auto i = count - 1;
+                            auto i = countUsing - 1;
                             idxUsing.push_back(i);
                             idxUsing.push_back(i - 2);
                             idxUsing.push_back(i - 1);
