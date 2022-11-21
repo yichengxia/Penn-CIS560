@@ -216,7 +216,7 @@ void Chunk::fillChunk() {
                     setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
                 }
                 if (height > 138) {
-                    if (height <= 148) {
+                    if (height <= 143) {
                         setBlockAt(i, height, j, ICE);
                     } else {
                         setBlockAt(i, height, j, GRASS);
