@@ -14,6 +14,7 @@ Player::Player(glm::vec3 pos, Terrain &terrain)
       MaxVelocity(glm::vec3(15)), MinVelocity(glm::vec3(-15)),
       FlightModeHeight(139.f), MaxFlightHeight(255.f), MinFlightHeight(0.f),
       FlyUpAcceleration(20), JumpVelocity(10),
+      effect(new QSoundEffect),
       mcr_camera(m_camera), mcr_posPrev(pos)
 {}
 
@@ -40,6 +41,10 @@ void Player::processInputs(InputBundle &inputs) {
     // Read input from the user
     glm::vec3 inputDirection = glm::vec3(0);
     if (inputs.wPressed) {
+        effect->setSource(QUrl::fromLocalFile(":/sounds/footsteps.wav"));
+        effect->setLoopCount(1);
+        effect->setVolume(0.25f);
+        effect->play();
         inputDirection += m_forward;
     }
     if (inputs.sPressed) {

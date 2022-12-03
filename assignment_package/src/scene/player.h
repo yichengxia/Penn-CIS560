@@ -2,6 +2,7 @@
 #include "entity.h"
 #include "camera.h"
 #include "terrain.h"
+#include <QSoundEffect>
 
 class Player : public Entity {
 private:
@@ -18,7 +19,8 @@ private:
     float FlightModeHeight;
     const float MaxFlightHeight, MinFlightHeight;
     const float FlyUpAcceleration, JumpVelocity;
-
+    // For Sound function
+    QSoundEffect *effect;
 
     void processInputs(InputBundle &inputs);
     void computePhysics(float dT, const Terrain &terrain);
