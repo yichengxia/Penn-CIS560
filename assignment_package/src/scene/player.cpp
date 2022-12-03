@@ -41,10 +41,6 @@ void Player::processInputs(InputBundle &inputs) {
     // Read input from the user
     glm::vec3 inputDirection = glm::vec3(0);
     if (inputs.wPressed) {
-        effect->setSource(QUrl::fromLocalFile(":/sounds/footsteps.wav"));
-        effect->setLoopCount(1);
-        effect->setVolume(0.25f);
-        effect->play();
         inputDirection += m_forward;
     }
     if (inputs.sPressed) {
@@ -67,6 +63,13 @@ void Player::processInputs(InputBundle &inputs) {
             inputDirection = glm::normalize(inputDirection);
         }
     } else { // in ground mode
+        // Add move sound for four directions if pressed
+        if (inputs.wPressed || inputs.sPressed || inputs.dPressed || inputs.aPressed) {
+            effect->setSource(QUrl::fromLocalFile(":/sounds/footsteps.wav"));
+            effect->setLoopCount(1);
+            effect->setVolume(0.25f);
+            effect->play();
+        }
         // discarding Y component and re-normalizing
         inputDirection.y = 0;
         if (glm::length(inputDirection) > 0) {
