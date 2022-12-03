@@ -62,14 +62,14 @@ void Player::processInputs(InputBundle &inputs) {
         if (glm::length(inputDirection) > 0) {
             inputDirection = glm::normalize(inputDirection);
         }
-    } else { // in ground mode
-        // Add move sound for four directions if pressed
-        if (inputs.wPressed || inputs.sPressed || inputs.dPressed || inputs.aPressed) {
-            effect->setSource(QUrl::fromLocalFile(":/sounds/footsteps.wav"));
+        // Add wind sound for 6 directions if pressed
+        if (inputs.wPressed || inputs.sPressed || inputs.dPressed || inputs.aPressed || inputs.qPressed || inputs.ePressed) {
+            effect->setSource(QUrl::fromLocalFile(":/sounds/wind.wav"));
             effect->setLoopCount(1);
-            effect->setVolume(0.25f);
+            effect->setVolume(0.5f);
             effect->play();
         }
+    } else { // in ground mode
         // discarding Y component and re-normalizing
         inputDirection.y = 0;
         if (glm::length(inputDirection) > 0) {
@@ -79,6 +79,13 @@ void Player::processInputs(InputBundle &inputs) {
         if (inputs.spacePressed) {
             //  Add a vertical component to the player's velocity to make them jump
             m_velocity.y += JumpVelocity;
+        }
+        // Add footsteps sound for 4 directions if pressed
+        if (inputs.wPressed || inputs.sPressed || inputs.dPressed || inputs.aPressed) {
+            effect->setSource(QUrl::fromLocalFile(":/sounds/footsteps.wav"));
+            effect->setLoopCount(1);
+            effect->setVolume(0.25f);
+            effect->play();
         }
     }
 
