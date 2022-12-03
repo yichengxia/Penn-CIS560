@@ -20,7 +20,8 @@ private:
     const float MaxFlightHeight, MinFlightHeight;
     const float FlyUpAcceleration, JumpVelocity;
     // For Sound function
-    QSoundEffect *effect;
+    QSoundEffect *footsteps;
+    QSoundEffect *wind;
 
     void processInputs(InputBundle &inputs);
     void computePhysics(float dT, const Terrain &terrain);

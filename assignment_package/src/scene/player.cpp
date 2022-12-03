@@ -14,9 +14,14 @@ Player::Player(glm::vec3 pos, Terrain &terrain)
       MaxVelocity(glm::vec3(15)), MinVelocity(glm::vec3(-15)),
       FlightModeHeight(139.f), MaxFlightHeight(255.f), MinFlightHeight(0.f),
       FlyUpAcceleration(20), JumpVelocity(10),
-      effect(new QSoundEffect),
+      footsteps(new QSoundEffect), wind(new QSoundEffect),
       mcr_camera(m_camera), mcr_posPrev(pos)
-{}
+{
+    footsteps->setSource(QUrl::fromLocalFile(":/sounds/footsteps.wav"));
+    footsteps->setVolume(0.25f);
+    wind->setSource(QUrl::fromLocalFile(":/sounds/wind.wav"));
+    wind->setVolume(0.5f);
+}
 
 Player::~Player()
 {}
@@ -64,10 +69,7 @@ void Player::processInputs(InputBundle &inputs) {
         }
         // Add wind sound for 6 directions if pressed
         if (inputs.wPressed || inputs.sPressed || inputs.dPressed || inputs.aPressed || inputs.qPressed || inputs.ePressed) {
-            effect->setSource(QUrl::fromLocalFile(":/sounds/wind.wav"));
-            effect->setLoopCount(1);
-            effect->setVolume(0.5f);
-            effect->play();
+            wind->play();
         }
     } else { // in ground mode
         // discarding Y component and re-normalizing
@@ -82,10 +84,7 @@ void Player::processInputs(InputBundle &inputs) {
         }
         // Add footsteps sound for 4 directions if pressed
         if (inputs.wPressed || inputs.sPressed || inputs.dPressed || inputs.aPressed) {
-            effect->setSource(QUrl::fromLocalFile(":/sounds/footsteps.wav"));
-            effect->setLoopCount(1);
-            effect->setVolume(0.25f);
-            effect->play();
+            footsteps->play();
         }
     }
 
