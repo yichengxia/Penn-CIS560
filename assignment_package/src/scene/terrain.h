@@ -119,4 +119,7 @@ public:
     bool initialTerrainDoneLoading();
     void multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, float dT);
 
+    // For height map feature
+    void updateGreyscaleHeights(int playerX, int playerZ, std::vector<std::vector<float>> newHeights);
+    void updateColorHeights(int playerX, int playerZ, std::vector<std::vector<std::pair<float, BlockType>>> newHeights);
 };

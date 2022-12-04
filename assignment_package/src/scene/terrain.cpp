@@ -356,3 +356,40 @@ void Terrain::multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, fl
 bool Terrain::initialTerrainDoneLoading() {
     return m_chunkCreated >= 25 * 4 * 4;
 }
+
+void Terrain::updateGreyscaleHeights(int playerX, int playerZ, std::vector<std::vector<float>> newHeights) {
+    int minX = playerX - newHeights[0].size() / 2;
+    int minZ = playerZ - newHeights.size() / 2;
+    for (int x = 0; x < (int) newHeights.size(); x++) {
+        for (int z = 0; z < (int) newHeights[0].size(); z++) {
+            float xx = minX + x;
+            float zz = minZ + z;
+            float h = newHeights[x][z];
+            if (h > 255) {
+                h = 255.f;
+            }
+            for(int y = 0; y < 256; y++) {
+                if (y < h) {
+                    if (y == ceil(h) - 1) {
+                        setBlockAt(xx, y, zz, GRASS);
+                    } else if (y >= 128) {
+                        setBlockAt(xx, y, zz, DIRT);
+                    } else {
+                        setBlockAt(xx, y, zz, STONE);
+                    }
+                } else {
+                    setBlockAt(xx, y, zz, EMPTY);
+                }
+            }
+            const uPtr<Chunk> &c = getChunkAt(xx, zz);
+            c->destroyVBOdata();
+            c->createVBOdata();
+            c->create(c->m_vboData.m_vboDataOpaque, c->m_vboData.m_idxDataOpaque,
+                      c->m_vboData.m_vboDataTransparent, c->m_vboData.m_idxDataTransparent);
+        }
+    }
+}
+
+void Terrain::updateColorHeights(int playerX, int playerZ, std::vector<std::vector<std::pair<float, BlockType>>> newBlocks) {
+    // TODO
+}

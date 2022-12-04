@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <QApplication>
+#include <QFileDialog>
 #include <QKeyEvent>
 #include <QDateTime>
 
@@ -271,7 +272,71 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
     if (e->key() == Qt::Key_Space) {
         // In Ground mode: Add a vertical component to the player's velocity to make them jump
         m_inputs.spacePressed = true;
-   }
+    }
+    // For height map feature
+    if (e->key() == Qt::Key_H) {
+        QString fileName = QFileDialog::getOpenFileName(this, tr("Open grayscale/color image"),
+                                                        "/",
+                                                        tr("Images (*.png *.jpeg *.jpg)"));
+        if (fileName.length() > 0) {
+            QImage img(fileName);
+            img = img.scaled(QSize(20, 20), Qt::KeepAspectRatio, Qt::FastTransformation);
+            bool allGray = img.allGray();
+            int w = img.width();
+            int h = img.height();
+            std::vector<std::vector<float>> newHeights;
+            std::vector<std::vector<std::pair<float, BlockType>>> newBlocks;
+            std::vector<std::pair<glm::vec3, BlockType>> colorPairs; // (RGB, NAME) pairs
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(0, 0, 0), BLACK));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(255, 255, 255), WHITE));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(255, 0, 0), RED));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(0, 255, 0), LIME));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(0, 0, 255), BLUE));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(255, 255, 0), YELLOW));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(0, 255, 255), CYAN));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(255, 0, 255), MAGENTA));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(192, 192, 192), SILVER));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(128, 128, 128), GRAY));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(128, 0, 0), MAROON));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(128, 128, 0), OLIVE));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(0, 128, 0), GREEN));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(128, 0, 128), PURPLE));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(0, 128, 128), TEAL));
+            colorPairs.push_back(std::pair<glm::vec3, BlockType>(glm::vec3(0, 0, 128), NAVY));
+            for (int i = 0; i < w; i++) {
+                newHeights.push_back(std::vector<float>());
+                newBlocks.push_back(std::vector<std::pair<float, BlockType>>());
+                for (int j = 0; j < h; j++) {
+                    QColor c = img.pixel(i, j);
+                    if (allGray) {
+                        float greyscale = c.red();
+                        newHeights[i].push_back(greyscale / 255.f * 32.f + 128.f);
+                    } else {
+                        float greyscale = 0.2126 * c.red() + 0.7152 * c.green() + 0.0722 * c.blue();
+                        BlockType t = BLACK;
+                        int minDistSquare = (c.red() - colorPairs[0].first.x) * (c.red() - colorPairs[0].first.x) +
+                                            (c.green() - colorPairs[0].first.y) * (c.green() - colorPairs[0].first.y) +
+                                            (c.blue() - colorPairs[0].first.z) * (c.blue() - colorPairs[0].first.z);
+                        for (int k = 1; k < (int) colorPairs.size(); k++) {
+                            int distSquare = (c.red() - colorPairs[k].first.x) * (c.red() - colorPairs[k].first.x) +
+                                             (c.green() - colorPairs[k].first.y) * (c.green() - colorPairs[k].first.y) +
+                                             (c.blue() - colorPairs[k].first.z) * (c.blue() - colorPairs[k].first.z);
+                            if (minDistSquare > distSquare) {
+                                minDistSquare = distSquare;
+                                t = colorPairs[k].second;
+                            }
+                        }
+                        newBlocks[i].push_back(std::pair<float, BlockType>(greyscale / 255.f * 32.f + 128.f, t));
+                    }
+                }
+            }
+            if (allGray) {
+                m_terrain.updateGreyscaleHeights(m_player.mcr_position.x, m_player.mcr_position.z, newHeights);
+            } else {
+                m_terrain.updateColorHeights(m_player.mcr_position.x, m_player.mcr_position.z, newBlocks);
+            }
+        }
+    }
 }
 
 void MyGL::keyReleaseEvent(QKeyEvent *e) {
@@ -304,7 +369,7 @@ void MyGL::keyReleaseEvent(QKeyEvent *e) {
     }
     if (e->key() == Qt::Key_Space) {
         m_inputs.spacePressed = false;
-   }
+    }
 }
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {

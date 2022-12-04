@@ -8,7 +8,9 @@
 // is that of an int (so, usually four bytes). This *does* limit us to only 256 different
 // block types, but in the scope of this project we'll never get anywhere near that many.
 enum BlockType : unsigned char {
-    EMPTY, GRASS, DIRT, STONE, ICE, WATER, SNOW, BRONZE, LAVA, BEDROCK, OTHER
+    EMPTY, GRASS, DIRT, STONE, ICE, WATER, SNOW, BRONZE, LAVA, BEDROCK, OTHER,
+    // For height map feature
+    BLACK, WHITE, RED, LIME, BLUE, YELLOW, CYAN, MAGENTA, SILVER, GRAY, MAROON, OLIVE, GREEN, PURPLE, TEAL, NAVY
 };
 
 // The six cardinal directions in 3D space
