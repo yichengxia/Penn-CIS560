@@ -85,8 +85,8 @@ Say if we load a large image, we will spend a long time regenerating the scene a
 
 I initialized a `std::vector<std::vector<float>>` instance `newHeights` to store all the new heights calculated by grayscale values. The grayscale value is get by the equation mentioned in class:
 $$\text{Grayscale} = 0.2126 \cdot R + 0.7152 \cdot G + 0.0722 \cdot B$$
-and I recompute grayscale as
-$$\text{Grayscale} = \text{Grayscale} \cdot 0.25 + 128$$
+and I compute new height as
+$$\text{Height} = \text{Grayscale} \cdot 0.25 + 128$$
 to make it in the range of $[128, 192]$ to have a smoother view.
 
 If the loaded image is all gray, we then call `Terrain::updategrayscaleHeights(int playerX, int playerZ, std::vector<std::vector<float>> newHeights)` and set blocks as is in `Chunk::fillChunk()` but with new heights.
@@ -116,6 +116,8 @@ Here is an example of loading a colored Winnie the Pooh image.
     <img src="images/color_sample.png" height="300">
     <img src="images/color_result.png" height="300">
 </p>
+
+Sample images for the height map features are in the `images` folder.
 
 ### Sound
 
