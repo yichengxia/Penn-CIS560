@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>textures/minecraft_textures_all.png</file>
+        <file>textures/minecraft_textures_extended.png</file>
         <file>textures/minecraft_normals_all.png</file>
     </qresource>
 </RCC>

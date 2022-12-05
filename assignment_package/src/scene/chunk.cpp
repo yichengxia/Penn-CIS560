@@ -71,7 +71,7 @@ glm::vec4 Chunk::getColor(BlockType t) {
             return glm::vec4(0.9f, 0.0f, 0.3f, 1.f);
         case BEDROCK:
             return glm::vec4(0.6f, 0.5f, 0.5f, 1.f);
-        // For height map feature
+        // For height map feature (unused)
         case BLACK:
             return glm::vec4(0.f, 0.f, 0.f, 1.f);
         case WHITE:
@@ -186,7 +186,7 @@ void Chunk::createVBOdata() {
                                 bufUsing.push_back(glm::vec4(neighborFace.directionVec, 0));
                                 // color
                                 bufUsing.push_back(glm::vec4(uvs.at(uvs.count(currType) ? currType : ICE)[neighborFace.direction] + vd.uv,
-                                                   currType == WATER || currType == LAVA ? 1 : 0, 0));
+                                                       currType == WATER || currType == LAVA ? 1 : 0, 0));
                                 countUsing++;
                             }
                             auto i = countUsing - 1;

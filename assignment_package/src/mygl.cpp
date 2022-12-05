@@ -89,7 +89,7 @@ void MyGL::initializeGL()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    QImage img(":/textures/minecraft_textures_all.png");
+    QImage img(":/textures/minecraft_textures_extended.png");
     img = (img.convertToFormat(QImage::Format_RGBA8888)).mirrored();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.width(), img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
     m_progLambert.setSampler(0);
@@ -325,7 +325,7 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
                                 t = colorPairs[k].second;
                             }
                         }
-                        newBlocks[i].push_back(std::pair<float, BlockType>(grayscale / 2.f * 32.f + 127.f, t));
+                        newBlocks[i].push_back(std::pair<float, BlockType>(grayscale * 0.25 + 128.f, t));
                     }
                 }
             }
