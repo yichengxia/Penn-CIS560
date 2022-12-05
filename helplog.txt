@@ -14,7 +14,11 @@ Yicheng Xia: Refer to Adam's code showed in class
 Yilin Guo: Refer to Adam's code showed in class
 Shiwei Ge: Refer to Adam's code showed in class
 
-MS2
+MS3
 Yicheng Xia:
 Refered Qt documentation for QFileDialog, QImage, and QSoundEffect classes. https://doc.qt.io/
 Basic RGB colors: https://www.rapidtables.com/web/color/RGB_Color.html
+
+Shiwei Ge:
+Refer to Adam's code showed in class
+

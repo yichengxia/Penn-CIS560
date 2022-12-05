@@ -1,5 +1,6 @@
 #include "chunk.h"
 #include "noise_functions.h"
+#include <iostream>
 
 Chunk::Chunk(OpenGLContext* mp_context) : Drawable(mp_context), m_blocks(), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}, m_vboData(this)
 {
@@ -213,12 +214,13 @@ void Chunk::createVBOdata() {
 void Chunk::fillChunk() {
     int x = m_pos.x;
     int z = m_pos.y;
-    int isGrassLand = rand()%2;
     // Populate blocks by x, z coordinates
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) {
             glm::vec2 pos(i + x, j + z);
             glm::vec2 eleMoi = eleMoiValue(pos/128.f);
+
+            // cave
             setBlockAt(i,0,j,BEDROCK);
             for (int y = 1; y <= 95; y++) {
                 if (perlinNoise(glm::vec3(x + i, y, z + j) / 10.f) > 0) {
@@ -231,8 +233,20 @@ void Chunk::fillChunk() {
                     }
                 }
             }
+            float pi = 3.14159f;
+            float moist = moisture(glm::vec2(pos[0] * cos(pi * 0.25) - sin(pi * 0.25) * pos[1],
+                                             pos[0] * sin(pi * 0.25) + cos(pi * 0.25) * pos[1]) / 1000.f);
+
+            moist = 0.5 * (moist + 1);
+            float temperature = moisture(glm::vec2(pos[0] * cos(pi * 0.45) - sin(pi * 0.45) * pos[1],
+                                                   pos[0] * sin(pi * 0.45) + cos(pi * 0.45) * pos[1]) / 1000.f);
+
+            temperature = 0.5 * (temperature + 1);
+            float s = glm::smoothstep(0.4f, 0.75f, moist);
+            float t = glm::smoothstep(0.4f, 0.75f, temperature);
             int height = glm::mix(grasslandValue(pos), mountainValue(pos), eleMoi[0]);
-            if (eleMoi[0] > 0.3) {
+            float threshold = 0.3;
+            if (s > threshold && t > threshold) {
                 for (int y = 96; y <= height; ++y) {
                     if (y <= 128) {
                         setBlockAt(i, y, j, STONE);
@@ -243,7 +257,7 @@ void Chunk::fillChunk() {
                         setBlockAt(i, y, j, SNOW);
                     }
                 }
-            } else {
+            } else if(s < threshold && t > threshold) {
                 for (int y = 96; y < height; y++) {
                     setBlockAt(i, y, j, y <= 128 ? STONE : DIRT);
                 }
@@ -257,6 +271,14 @@ void Chunk::fillChunk() {
                     for (int y = height; y <= 138; y++) {
                         setBlockAt(i, y, j, WATER);
                     }
+                }
+            } else if(s > threshold && t < threshold) {
+                for (int y = 96; y < height; y++) {
+                    setBlockAt(i, y, j, ICE);
+                }
+            } else {
+                for (int y = 96; y < height; y++) {
+                    setBlockAt(i, y, j, SAND);
                 }
             }
 
