@@ -2,7 +2,5 @@
     <qresource prefix="/">
         <file>textures/minecraft_textures_all.png</file>
         <file>textures/minecraft_normals_all.png</file>
-        <file>textures/color_sample.png</file>
-        <file>textures/grayscale_sample.png</file>
     </qresource>
 </RCC>

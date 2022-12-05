@@ -280,7 +280,7 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
                                                         tr("Images (*.png *.jpeg *.jpg)"));
         if (fileName.length() > 0) {
             QImage img(fileName);
-            img = img.scaled(QSize(20, 20), Qt::KeepAspectRatio, Qt::FastTransformation);
+            img = img.scaled(QSize(64, 64), Qt::KeepAspectRatio, Qt::FastTransformation);
             bool allGray = img.allGray();
             int w = img.width();
             int h = img.height();
@@ -308,11 +308,10 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
                 newBlocks.push_back(std::vector<std::pair<float, BlockType>>());
                 for (int j = 0; j < h; j++) {
                     QColor c = img.pixel(i, j);
+                    float grayscale = 0.2126 * c.red() + 0.7152 * c.green() + 0.0722 * c.blue();
                     if (allGray) {
-                        float greyscale = c.red();
-                        newHeights[i].push_back(greyscale / 255.f * 32.f + 128.f);
+                        newHeights[i].push_back(grayscale * 0.25 + 128.f);
                     } else {
-                        float greyscale = 0.2126 * c.red() + 0.7152 * c.green() + 0.0722 * c.blue();
                         BlockType t = BLACK;
                         int minDistSquare = (c.red() - colorPairs[0].first.x) * (c.red() - colorPairs[0].first.x) +
                                             (c.green() - colorPairs[0].first.y) * (c.green() - colorPairs[0].first.y) +
@@ -326,12 +325,12 @@ void MyGL::keyPressEvent(QKeyEvent *e) {
                                 t = colorPairs[k].second;
                             }
                         }
-                        newBlocks[i].push_back(std::pair<float, BlockType>(greyscale / 255.f * 32.f + 128.f, t));
+                        newBlocks[i].push_back(std::pair<float, BlockType>(grayscale / 2.f * 32.f + 127.f, t));
                     }
                 }
             }
             if (allGray) {
-                m_terrain.updateGreyscaleHeights(m_player.mcr_position.x, m_player.mcr_position.z, newHeights);
+                m_terrain.updategrayscaleHeights(m_player.mcr_position.x, m_player.mcr_position.z, newHeights);
             } else {
                 m_terrain.updateColorHeights(m_player.mcr_position.x, m_player.mcr_position.z, newBlocks);
             }
