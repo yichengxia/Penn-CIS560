@@ -71,6 +71,39 @@ glm::vec4 Chunk::getColor(BlockType t) {
             return glm::vec4(0.9f, 0.0f, 0.3f, 1.f);
         case BEDROCK:
             return glm::vec4(0.6f, 0.5f, 0.5f, 1.f);
+        // For height map feature (unused)
+        case BLACK:
+            return glm::vec4(0.f, 0.f, 0.f, 1.f);
+        case WHITE:
+            return glm::vec4(1.f, 1.f, 1.f, 1.f);
+        case RED:
+            return glm::vec4(1.f, 0.f, 0.f, 1.f);
+        case LIME:
+            return glm::vec4(0.f, 1.f, 0.f, 1.f);
+        case BLUE:
+            return glm::vec4(0.f, 0.f, 1.f, 1.f);
+        case YELLOW:
+            return glm::vec4(1.f, 1.f, 0.f, 1.f);
+        case CYAN:
+            return glm::vec4(0.f, 1.f, 1.f, 1.f);
+        case MAGENTA:
+            return glm::vec4(1.f, 0.f, 1.f, 1.f);
+        case SILVER:
+            return glm::vec4(0.75f, 0.75f, 0.75f, 1.f);
+        case GRAY:
+            return glm::vec4(0.5f, 0.5f, 0.5f, 1.f);
+        case MAROON:
+            return glm::vec4(0.5f, 0.f, 0.f, 1.f);
+        case OLIVE:
+            return glm::vec4(0.5f, 0.5f, 0.f, 1.f);
+        case GREEN:
+            return glm::vec4(0.f, 0.5f, 0.f, 1.f);
+        case PURPLE:
+            return glm::vec4(0.5f, 0.f, 0.5f, 1.f);
+        case TEAL:
+            return glm::vec4(0.f, 0.5f, 0.5f, 1.f);
+        case NAVY:
+            return glm::vec4(0.f, 0.f, 0.5f, 1.f);
         default:
             // Other block types are not yet handled, so we default to debug purple
             return glm::vec4(1.f, 0.f, 1.f, 1.f);
@@ -153,7 +186,7 @@ void Chunk::createVBOdata() {
                                 bufUsing.push_back(glm::vec4(neighborFace.directionVec, 0));
                                 // color
                                 bufUsing.push_back(glm::vec4(uvs.at(uvs.count(currType) ? currType : ICE)[neighborFace.direction] + vd.uv,
-                                                   currType == WATER || currType == LAVA ? 1 : 0, 0));
+                                                       currType == WATER || currType == LAVA ? 1 : 0, 0));
                                 countUsing++;
                             }
                             auto i = countUsing - 1;
@@ -181,7 +214,7 @@ void Chunk::fillChunk() {
     int x = m_pos.x;
     int z = m_pos.y;
     int isGrassLand = rand()%2;
-        // Populate blocks by x, z coordinates
+    // Populate blocks by x, z coordinates
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) {
             glm::vec2 pos(i + x, j + z);
@@ -205,8 +238,7 @@ void Chunk::fillChunk() {
                         setBlockAt(i, y, j, STONE);
                     } else if (y < 200 || y < height) {
                         setBlockAt(i, y, j,
-                                   random1(glm::vec2(i, y)) < 0.9 ? STONE
-                                                                       : DIRT);
+                                   random1(glm::vec2(i, y)) < 0.9 ? STONE : DIRT);
                     } else {
                         setBlockAt(i, y, j, SNOW);
                     }

@@ -356,3 +356,75 @@ void Terrain::multithreadedWork(glm::vec3 playerPos, glm::vec3 playerPosPrev, fl
 bool Terrain::initialTerrainDoneLoading() {
     return m_chunkCreated >= 25 * 4 * 4;
 }
+
+void Terrain::updategrayscaleHeights(int playerX, int playerZ, std::vector<std::vector<float>> newHeights) {
+    int w = newHeights.size();
+    int h = newHeights[0].size();
+    int minX = playerX - w / 2.f;
+    int minZ = playerZ - h / 2.f;
+    for (int x = 0; x < w; x++) {
+        for (int z = 0; z < h; z++) {
+            int xx = minX + x;
+            int zz = minZ + z;
+            if (!hasChunkAt(xx, zz)) {
+                createChunkAt(xx, zz);
+            }
+            float height = newHeights[x][z];
+            for (int y = 0; y < 256; y++) {
+                if (y < height) {
+                    if (y == ceil(height) - 1) {
+                        setBlockAt(xx, y, zz, GRASS);
+                    } else if (y >= 128) {
+                        setBlockAt(xx, y, zz, DIRT);
+                    } else {
+                        setBlockAt(xx, y, zz, STONE);
+                    }
+                } else {
+                    setBlockAt(xx, y, zz, EMPTY);
+                }
+            }
+        }
+    }
+    for (int i = 0; i <= w / 16; i++) {
+        for (int j = 0; j <= h / 16; j++) {
+            const uPtr<Chunk> &c = getChunkAt(minX + i * 16, minZ + j * 16);
+            c->destroyVBOdata();
+            c->createVBOdata();
+            c->create(c->m_vboData.m_vboDataOpaque, c->m_vboData.m_idxDataOpaque,
+                      c->m_vboData.m_vboDataTransparent, c->m_vboData.m_idxDataTransparent);
+        }
+    }
+}
+
+void Terrain::updateColorHeights(int playerX, int playerZ, std::vector<std::vector<std::pair<float, BlockType>>> newBlocks) {
+    int w = newBlocks.size();
+    int h = newBlocks[0].size();
+    int minX = playerX - w / 2.f;
+    int minZ = playerZ - h / 2.f;
+    for (int x = 0; x < w; x++) {
+        for (int z = 0; z < h; z++) {
+            int xx = minX + x;
+            int zz = minZ + z;
+            if (!hasChunkAt(xx, zz)) {
+                createChunkAt(xx, zz);
+            }
+            float height = newBlocks[x][z].first;
+            for (int y = 0; y < 256; y++) {
+                if (y < height) {
+                    setBlockAt(xx, y, zz, newBlocks[x][z].second);
+                } else {
+                    setBlockAt(xx, y, zz, EMPTY);
+                }
+            }
+        }
+    }
+    for (int i = 0; i <= w / 16; i++) {
+        for (int j = 0; j <= h / 16; j++) {
+            const uPtr<Chunk> &c = getChunkAt(minX + i * 16, minZ + j * 16);
+            c->destroyVBOdata();
+            c->createVBOdata();
+            c->create(c->m_vboData.m_vboDataOpaque, c->m_vboData.m_idxDataOpaque,
+                      c->m_vboData.m_vboDataTransparent, c->m_vboData.m_idxDataTransparent);
+        }
+    }
+}

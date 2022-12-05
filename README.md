@@ -69,3 +69,61 @@ Else, check if each Chunk in this zone already has VBO data. If not, spawn anoth
 Then main thread checks m_chunksThatHaveBlockData by sending filled Chunks to new VBOWorkers, and sending completed VBO data to the GPU.
 
 m_chunksThatHaveBlockData and m_chunksThatHaveVBOs are protected by Mutexs. When subthreads or main thred write to them, they need to get the lock first and release lock after finishing writing.
+
+# Milestone 3
+
+## Yicheng Xia (Grayscale image file as height map, Color image file as height map, Sound):
+
+### Grayscale image file as height map
+
+This feature allows the user to load a grayscale image to function as a height map that directly modifies a portion of the world.
+
+It is activated by pressing the `H` key on the keyboard.
+Then you can select an image to load, which changes the $64 \times 64$ area around the player while keeping the relative ratio of the original image by setting `Qt::KeepAspectRatio`.
+This reduces computing time to be seconds and makes it easier for us to see the rendered image in one view.
+Say if we load a large image, we will spend a long time regenerating the scene and fly across the sky but always see a partial view of the full image scene.
+
+I initialized a `std::vector<std::vector<float>>` instance `newHeights` to store all the new heights calculated by grayscale values. The grayscale value is get by the equation mentioned in class:
+$$\text{Grayscale} = 0.2126 \cdot R + 0.7152 \cdot G + 0.0722 \cdot B$$
+and I compute new height as
+$$\text{Height} = \text{Grayscale} \cdot 0.25 + 128$$
+to make it in the range of $[128, 192]$ to have a smoother view.
+
+If the loaded image is all gray, we then call `Terrain::updategrayscaleHeights(int playerX, int playerZ, std::vector<std::vector<float>> newHeights)` and set blocks as is in `Chunk::fillChunk()` but with new heights.
+
+Here is an example of loading a grayscale moon image.
+<p align="center">
+    <img src="images/grayscale_sample.png" height="300">
+    <img src="images/grayscale_result.png" height="300">
+</p>
+
+### Color image file as height map
+
+This feature has a similar logistic as *Grayscale image file as height map*.
+
+I initialized a `std::vector<std::vector<std::pair<float, BlockType>>>` instance `newBlocks` to store all the pairs of (new height, BlockType name) calculated by grayscale values.
+I also used a `std::vector<std::pair<glm::vec3, BlockType>>` instance `colorPairs` to preload 15 classic colors (RGB vectors) with their BlockType names.
+To put in the most accurate BlockType name, the algorithm is to loop through all the possible colors and choose the block with a color vector $\vec{c_b}$ that gives the minimum $||\vec{c_i} - \vec{c_b}||^2$,
+where $\vec{c_i}$ is the image color vector.
+
+I substituted the original **13th** column with a classic color palette and hardcoded the coordinates of the 15 colors as what I did for texuring before.
+Now we load `minecraft_textures_extended.png` instead.
+
+If the loaded image is not all gray, we then call `Terrain::updateColorHeights(int playerX, int playerZ, std::vector<std::vector<std::pair<float, BlockType>>> newBlocks)` and set blocks as is in `Chunk::fillChunk()` but with new heights and new color blocks.
+
+Here is an example of loading a colored Winnie the Pooh image.
+<p align="center">
+    <img src="images/color_sample.png" height="300">
+    <img src="images/color_result.png" height="300">
+</p>
+
+Sample images for the height map features are in the `images` folder.
+
+### Sound
+
+This feature is relatively easy to implement. I preloaded 2 QSoundEffect instances for footsteps and wind sounds.
+Footsteps sound works only when the player is in the ground mode,
+and wind sound works only for the fight mode.
+
+When pressing `W`, `A`, `S`, `D` in ground mode, you can hear the footsteps sound.
+When pressing `W`, `A`, `S`, `D`, `Q`, `E` in flight mode, you can hear the wind sound.
