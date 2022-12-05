@@ -8,7 +8,7 @@
 // is that of an int (so, usually four bytes). This *does* limit us to only 256 different
 // block types, but in the scope of this project we'll never get anywhere near that many.
 enum BlockType : unsigned char {
-    EMPTY, GRASS, DIRT, STONE, ICE, WATER, SNOW, BRONZE, LAVA, BEDROCK, OTHER,
+    EMPTY, GRASS, DIRT, STONE, ICE, WATER, SNOW, BRONZE, LAVA, BEDROCK,SAND, OTHER,
     // For height map feature
     BLACK, WHITE, RED, LIME, BLUE, YELLOW, CYAN, MAGENTA, SILVER, GRAY, MAROON, OLIVE, GREEN, PURPLE, TEAL, NAVY
 };
@@ -129,6 +129,12 @@ const std::unordered_map<BlockType, std::array<glm::vec2, 6>> uvs {
                glm::vec2(1.f * BLK_UV, 14.f * BLK_UV),
                glm::vec2(1.f * BLK_UV, 14.f * BLK_UV),
                glm::vec2(1.f * BLK_UV, 14.f * BLK_UV)}},
+    {SAND, {glm::vec2(14.f * BLK_UV, 7.f * BLK_UV),
+               glm::vec2(14.f * BLK_UV, 7.f * BLK_UV),
+               glm::vec2(14.f * BLK_UV, 7.f * BLK_UV),
+               glm::vec2(14.f * BLK_UV, 7.f * BLK_UV),
+               glm::vec2(14.f * BLK_UV, 7.f * BLK_UV),
+               glm::vec2(14.f * BLK_UV, 7.f * BLK_UV)}},
     // For height map feature
     {BLACK, {glm::vec2(12.f * BLK_UV, 15.f * BLK_UV),
              glm::vec2(12.f * BLK_UV, 15.f * BLK_UV),

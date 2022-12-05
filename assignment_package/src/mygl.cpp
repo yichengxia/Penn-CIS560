@@ -11,7 +11,7 @@ MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this),m_progPost(this),
-      m_terrain(this), m_player(glm::vec3(48.f, 200.f, 48.f), m_terrain),
+      m_terrain(this), m_player(glm::vec3(103.f, 200.f, -30.f), m_terrain),
       m_renderedTexture(0), m_time(0),
       m_prevFrameTime(QDateTime::currentMSecsSinceEpoch()),
       m_initialTerrainLoaded(false), m_quad(this),
