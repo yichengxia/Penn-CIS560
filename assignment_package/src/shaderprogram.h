@@ -37,6 +37,10 @@ public:
                        // to
                        // read the texture containing the scene render
 
+    // Sky demo
+    int unifDimensions;
+    int unifEye;
+
 public:
     ShaderProgram(OpenGLContext* context);
     // Sets up the requisite GL data and shaders from the given .glsl files

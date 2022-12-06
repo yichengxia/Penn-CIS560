@@ -13,6 +13,10 @@ private:
     float m_aspect;    // Aspect ratio
 
 public:
+    glm::vec3 V,        //Represents the vertical component of the plane of the viewing frustum that passes through the camera's reference point. Used in Camera::Raycast.
+              H;        //Represents the horizontal component of the plane of the viewing frustum that passes through the camera's reference point. Used in Camera::Raycast.
+
+
     Camera(glm::vec3 pos);
     Camera(unsigned int w, unsigned int h, glm::vec3 pos);
     Camera(const Camera &c);

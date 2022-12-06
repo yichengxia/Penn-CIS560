@@ -77,6 +77,9 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     unifSampler = context->glGetUniformLocation(prog, "u_Texture");
     unifTime = context->glGetUniformLocation(prog, "u_Time");
     unifCase = context->glGetUniformLocation(prog, "u_Case");
+    // Sky
+    unifDimensions = context->glGetUniformLocation(prog, "u_Dimensions");
+    unifEye = context->glGetUniformLocation(prog, "u_Eye");
 }
 
 void ShaderProgram::useMe()

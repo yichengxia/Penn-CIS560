@@ -11,7 +11,8 @@ MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this),m_progPost(this),
-      m_terrain(this), m_player(glm::vec3(103.f, 200.f, -30.f), m_terrain),
+      mp_progSky(new ShaderProgram(this)),
+      m_terrain(this), m_player(glm::vec3(103.f, 170.f, -30.f), m_terrain),
       m_renderedTexture(0), m_time(0),
       m_prevFrameTime(QDateTime::currentMSecsSinceEpoch()),
       m_initialTerrainLoaded(false), m_quad(this),
@@ -72,6 +73,9 @@ void MyGL::initializeGL()
     m_progFlat.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
     m_progInstanced.create(":/glsl/instanced.vert.glsl", ":/glsl/lambert.frag.glsl");
     m_progPost.create(":/glsl/post.vert.glsl", ":/glsl/post.frag.glsl");
+    // Sky
+    mp_progSky->create(":/glsl/sky.vert.glsl", ":/glsl/sky.frag.glsl");
+
     // Set a color with which to draw geometry.
     // This will ultimately not be used when you change
     // your program to render Chunks with vertex colors
@@ -108,6 +112,14 @@ void MyGL::resizeGL(int w, int h) {
 
     m_progLambert.setViewProjMatrix(viewproj);
     m_progFlat.setViewProjMatrix(viewproj);
+    mp_progSky->setViewProjMatrix(glm::inverse(viewproj));
+
+    // Sky
+    mp_progSky->useMe();
+    // pass u_Dimensions
+    this->glUniform2i(mp_progSky->unifDimensions, width(), height());
+    this->glUniform3f(mp_progSky->unifEye, m_player.mcr_camera.mcr_position.x, m_player.mcr_camera.mcr_position.y, m_player.mcr_camera.mcr_position.z);
+
     m_frameBuffer.resize(this->width(), this->height(),
                          this->devicePixelRatio());
     m_frameBuffer.destroy();
@@ -157,30 +169,35 @@ void MyGL::sendPlayerDataToGUI() const {
 // so paintGL() called at a rate of 60 frames per second.
 void MyGL::paintGL() {
     // Clear the screen so that we only see newly drawn images
-    glDisable(GL_DEPTH_TEST);
-    m_progFlat.setModelMatrix(glm::mat4());
-    m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
-    m_progFlat.draw(m_worldAxes);
-    glEnable(GL_DEPTH_TEST);
     m_frameBuffer.bindFrameBuffer();
+    glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
+
     glViewport(0, 0, this->width() * this->devicePixelRatio(),
                this->height() * this->devicePixelRatio());
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glm::mat4 viewproj = m_player.mcr_camera.getViewProj();
 
-    m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
-    m_progLambert.setViewProjMatrix(m_player.mcr_camera.getViewProj());
+    m_progFlat.setViewProjMatrix(viewproj);
+    m_progLambert.setViewProjMatrix(viewproj);
+
     m_progLambert.setTime(m_time++);
     m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
+    // Sky
+    // Pass u_ViewProj (inverse of the viewproj)
+    mp_progSky->setViewProjMatrix(glm::inverse(viewproj)); // View_Mat^(-1) * Proj_Mat^(-1) * p
+    mp_progSky->useMe();
+    // pass u_Eye
+    this->glUniform3f(mp_progSky->unifEye, m_player.mcr_camera.mcr_position.x, m_player.mcr_camera.mcr_position.y, m_player.mcr_camera.mcr_position.z);
+    // pass u_Time
+    this->glUniform1f(mp_progSky->unifTime, m_time);
+
+    mp_progSky->draw(m_quad);
 
 
     if (m_initialTerrainLoaded) {
         renderTerrain();
-        glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
 
-        glViewport(0, 0, this->width() * this->devicePixelRatio(),
-                   this->height() * this->devicePixelRatio());
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         m_frameBuffer.bindToTextureSlot(1);
         if (m_terrain.getBlockAt(m_player.mcr_position+glm::vec3(0,1.5,0)) == WATER) {
             // 1 is for under water visual effects
@@ -194,12 +211,6 @@ void MyGL::paintGL() {
         }
         m_progPost.draw(m_quad,1);
     }
-
-    glDisable(GL_DEPTH_TEST);
-    m_progFlat.setModelMatrix(glm::mat4());
-    m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
-    m_progFlat.draw(m_worldAxes);
-    glEnable(GL_DEPTH_TEST);
 
 }
 

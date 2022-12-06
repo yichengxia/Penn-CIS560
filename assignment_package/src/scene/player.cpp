@@ -89,6 +89,18 @@ void Player::processInputs(InputBundle &inputs) {
     }
 
     m_acceleration = inputDirection * Acceleration;
+
+    if (mcr_terrain.hasChunkAt(m_position.x, m_position.z)) {
+        BlockType currentBlockType = mcr_terrain.getBlockAt(m_position);
+        if (currentBlockType == ICE) {
+            m_acceleration *= 1.2;
+        } else if (currentBlockType == WATER) {
+            m_acceleration *= 0.6;
+        } else if (currentBlockType == SNOW) {
+            m_acceleration *= 0.8;
+        }
+    }
+
     for (int i = 0; i < 3; i++) {
         if (m_velocity[i] > 0) {
             m_minVelocity[i] = 0;

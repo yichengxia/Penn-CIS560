@@ -24,6 +24,8 @@ private:
     ShaderProgram m_progInstanced;// A shader program that is designed to be compatible with instanced rendering
     ShaderProgram m_progPost;
 
+    ShaderProgram* mp_progSky; // A screen-space shader for creating the sky background
+
     GLuint vao; // A handle for our vertex array object. This will store the VBOs created in our geometry classes.
                 // Don't worry too much about this. Just know it is necessary in order to render geometry.
 
@@ -65,6 +67,8 @@ public:
     // Called from paintGL().
     // Calls Terrain::draw().
     void renderTerrain();
+
+    void GLDrawScene();
 
 protected:
     // Automatically invoked when the user

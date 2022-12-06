@@ -22,3 +22,5 @@ Basic RGB colors: https://www.rapidtables.com/web/color/RGB_Color.html
 Shiwei Ge:
 Refer to Adam's code showed in class
 
+Yilin Guo: Refer to Adam's code http://www.cis.upenn.edu/~cis460/19fa/lectures/examples/raytracedSky.zip
+
