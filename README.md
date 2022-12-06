@@ -29,12 +29,13 @@ In mygl, construct InputBundle to record events (keyPress, keyRelease, mouseMove
 
 In player, first figure out the acceleration, base velocity and velocity limitation in each direction based on InputBundle and current player state. Following are some details:
 
-> If player is not in FlightMode and pressed spacebar, add base vertical velocity (JumpVelocity) to m_velocity.y.
-> If player's velocity is positive, its limitation is [0, MaxVelocity]; if is negative, limitation is [MinVelocity, 0]; if is zero, limitation is [MinVelocity, MaxVelocity].
-> If player is not in FlightMode, it always subject to gravity (m_acceleration.y -= Gravity).
-> If player is in process of transforming from GroundMode to FlightMode, add a FlyUpAcceleration to m_acceleration.y until reach FlightModeHeight.
-> Player is subject to friction & drag, which is a negative velocity proportional to current velocity.
-> Height of Player in flight mode is limited to [0, 255].
+- If player is not in FlightMode and pressed spacebar, add base vertical velocity (JumpVelocity) to m_velocity.y.
+- If player's velocity is positive, its limitation is [0, MaxVelocity]; if is negative, limitation is [MinVelocity, 0]; if is zero, limitation is [MinVelocity, MaxVelocity].
+- If player is not in FlightMode, it always subject to gravity (m_acceleration.y -= Gravity).
+- If player is in process of transforming from GroundMode to FlightMode, add a FlyUpAcceleration to m_acceleration.y until reach FlightModeHeight.
+- Player is subject to friction & drag, which is a negative velocity proportional to current velocity.
+- Height of Player in flight mode is limited to [0, 255].
+- If player is in ICE/WATER/SNOW, adjust its accelerate (* 1.2/0.6/0.8 respectively).
 
 Then alter camera's orientation (only when mouse is focused and the movement is not trivial) based on InputBundle, where the φ = [-89.9999, 89.9999], θ = [0, 360).
 
@@ -174,5 +175,34 @@ float threshold = 0.3;
 </p>
 
 
+## Yilin Guo (Day and night cycle)
+
+@ Create a procedural sky background using the raycast method: 
+
+ray direction is the direction from eye to fragCoord in world space. Rotating (0, 0, -1.0) by time to represent sun direction and transform into spherical coordinates.
+
+- Stage 1: sunDirection.theta < 0.2 --> night; 
+- Stage 2: 0.2 <= sunDirection.theta < 0.3 --> between night and sunrise/sunset; 
+- Stage 3: 0.3 <= sunDirection.theta < 0.5 --> sun nears the horizon (sunrise/sunset);
+- Stage 4: 0.5 <= sunDirection.theta < 0.6 --> between sunrise/sunset and day;
+- Stage 5: sunDirection.theta >= 0.6 --> day.
+
+For each stage 1 & 3 & 5, created two palettes to represent the bright half (near sun) and dark half (away from sun, dusky-colored). Two paletees in stage 1 are the same. For stage 2 & 4,  interpolate value of palettes of the neighbor two stages as time advances.
+
+For each half of each stage, color of the sky is interpolated value of palettes based on theta difference between the fragCoordDir and sunDir with 12 hard-coded thresholds.
+
+For each stage, color of the sky is interpolated value of bright half and dark half based on the angle between sun and fragCoord. 
+
+For stage 1, set some almost white points randomly to represent stars.
+
+For stage 3 & 4 & 5, if the angle between ray dir and vector to center of sun is less then 30 degree, 'draw' the sun. The adjacent 7.5 degree is sun itself, 7.5~30 degree is corona of sun, interpolate sun color with sky color.
+
+@ The light direction and color in the lambert shader, which is used to render terrain, also change to match the sky's sun and color:
+
+Calculate sun direction in the same way, which is the light direction used to calculate basic diffuseLight.
+
+Set basic ambientLight to vec3(0.5). 
+
+Then for each above stage (added stage 6: sunDirection.theta >= 0.8), multiply basic diffuseLight and ambientLight with different hard-coded value to match sky's sun and color respectively.
 
 
