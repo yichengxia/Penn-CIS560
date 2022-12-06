@@ -27,6 +27,9 @@ in float fs_Anim;
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
 
+const float PI = 3.14159265359;
+const float TWO_PI = 6.28318530718;
+
 float random1(vec3 p) {
     return fract(sin(dot(p,vec3(127.1, 311.7, 191.999)))
                  *43758.5453);
@@ -72,6 +75,27 @@ float fbm(vec3 p) {
     return sum;
 }
 
+// rotate r on (1, 0, 0) by alpha and normalized
+vec3 rotateOnRightGlobal(vec3 r, float alpha) {
+    mat4 rotMat = mat4(
+                    1, 0, 0, 0,
+                    0, cos(alpha), sin(alpha), 0,
+                    0, -sin(alpha), cos(alpha), 0,
+                    0, 0, 0, 1
+                  );
+    vec4 v = rotMat * vec4(r, 1);
+    return normalize(v.xyz);
+}
+
+vec2 sphereToUV(vec3 p) {
+    float phi = atan(p.z, p.x); // range: [-pi, pi]
+    if(phi < 0) {
+        phi += TWO_PI;
+    }
+    float theta = acos(p.y); // range: [0, pi]
+    return vec2(1 - phi / TWO_PI, 1 - theta / PI);
+}
+
 void main()
 {
     vec2 uv = fs_UV;
@@ -80,19 +104,46 @@ void main()
     }
     // Material base color (before shading)
     vec4 diffuseColor = texture(u_Texture, uv);
-//    diffuseColor = diffuseColor * (0.5 * fbm(fs_Pos.xyz) + 0.5);
+
+    vec3 sunDir = rotateOnRightGlobal(vec3(0, 0, -1.0), u_Time * 0.01); // sun direction
+    vec4 lightDir = vec4(sunDir, 0);
 
     // Calculate the diffuse term for Lambert shading
-    float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
+    float diffuseTerm = dot(normalize(fs_Nor), normalize(lightDir));
     // Avoid negative lighting values
     diffuseTerm = clamp(diffuseTerm, 0, 1);
 
-    float ambientTerm = 0.2;
+    float ambientTerm = 0.5;
 
-    float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
-                                                        //to simulate ambient lighting. This ensures that faces that are not
-                                                        //lit by our point light are not completely black.
+    vec2 sunUV = sphereToUV(sunDir);
+    vec3 diffuseLight = vec3(diffuseTerm);
+    vec3 ambientLight = vec3(ambientTerm);
+
+    if (sunUV.y <= 0.2) { // night
+        diffuseLight *= vec3(140, 80, 100) / 255.0;
+        ambientLight *= vec3(100, 80, 110) / 255.0;
+    } else if (sunUV.y < 0.3) { // between night and sunrise/sunset
+        float p = (sunUV.y - 0.2) / 0.1;
+        diffuseLight *= mix(vec3(140, 80, 100), vec3(254, 224, 190), p) / 255.0;
+        ambientLight *= mix(vec3(100, 80, 110), vec3(184, 129, 174), p) / 255.0;
+    } else if (sunUV.y < 0.5) { // sunrise or sunset
+        diffuseLight *= vec3(240, 224, 190) / 255.0;
+        ambientLight *= vec3(184, 129, 174) / 255.0;
+    } else if (sunUV.y < 0.6) { // between sunrise/sunset and daytime
+        float p = (sunUV.y - 0.5) / 0.1;
+        diffuseLight *= mix(vec3(240, 224, 190), vec3(240, 240, 190), p) / 255.0;
+        ambientLight *= mix(vec3(184, 129, 174) , vec3(188, 215, 240), p) / 255.0;
+    } else if (sunUV.y < 0.8){ // general day time
+        diffuseLight *= vec3(240, 240, 190) / 255.0;
+        ambientLight *= vec3(188, 215, 240) / 255.0;
+    } else { // noon
+        diffuseLight *= vec3(255, 255, 240) / 255.0;
+        ambientLight *= vec3(197, 232, 251) / 255.0;
+    }
 
     // Compute final shaded color
-    out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
+    //Add a small float value to the color multiplier
+    //to simulate ambient lighting. This ensures that faces that are not
+    //lit by our point light are not completely black.
+    out_Col = vec4(diffuseLight + ambientLight, 1) * diffuseColor;
 }
