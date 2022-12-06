@@ -40,3 +40,8 @@ float islandValue(vec2 uv);
 float riverNoise(vec2 uv);
 
 vec2 eleMoiValue(vec2 uv);
+glm::vec2 hash(glm::vec2 p);
+float SimplexNoise(glm::vec2 p);
+float moisture(glm::vec2 uv);
+
+float temperature(glm::vec2 uv);

@@ -14,8 +14,14 @@ Player::Player(glm::vec3 pos, Terrain &terrain)
       MaxVelocity(glm::vec3(15)), MinVelocity(glm::vec3(-15)),
       FlightModeHeight(139.f), MaxFlightHeight(255.f), MinFlightHeight(0.f),
       FlyUpAcceleration(20), JumpVelocity(10),
+      footsteps(new QSoundEffect), wind(new QSoundEffect),
       mcr_camera(m_camera), mcr_posPrev(pos)
-{}
+{
+    footsteps->setSource(QUrl::fromLocalFile(":/sounds/footsteps.wav"));
+    footsteps->setVolume(0.25f);
+    wind->setSource(QUrl::fromLocalFile(":/sounds/wind.wav"));
+    wind->setVolume(0.5f);
+}
 
 Player::~Player()
 {}
@@ -61,6 +67,10 @@ void Player::processInputs(InputBundle &inputs) {
         if (glm::length(inputDirection) > 0) {
             inputDirection = glm::normalize(inputDirection);
         }
+        // Add wind sound for 6 directions if pressed
+        if (inputs.wPressed || inputs.sPressed || inputs.dPressed || inputs.aPressed || inputs.qPressed || inputs.ePressed) {
+            wind->play();
+        }
     } else { // in ground mode
         // discarding Y component and re-normalizing
         inputDirection.y = 0;
@@ -71,6 +81,10 @@ void Player::processInputs(InputBundle &inputs) {
         if (inputs.spacePressed) {
             //  Add a vertical component to the player's velocity to make them jump
             m_velocity.y += JumpVelocity;
+        }
+        // Add footsteps sound for 4 directions if pressed
+        if (inputs.wPressed || inputs.sPressed || inputs.dPressed || inputs.aPressed) {
+            footsteps->play();
         }
     }
 

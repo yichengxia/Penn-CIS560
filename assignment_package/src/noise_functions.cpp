@@ -264,3 +264,33 @@ float interpNoise2D(glm::vec2 xy) {
 vec2 eleMoiValue(vec2 uv) {
     return vec2(clamp(0.f,1.f,fbm(uv,3)-0.2f), clamp(0.f,1.f,fbm(uv + vec2(-1000, 1024),3)+0.3f));
 }
+
+
+glm::vec2 hash(glm::vec2 p) {
+    p = glm::vec2(glm::dot(p, glm::vec2(127.1, 311.7)), glm::dot(p, glm::vec2(269.5, 183.3)));
+    glm::vec2 fract = glm::fract(glm::vec2(53758.5453123 * glm::cos(p.x), 53758.5453123 * glm::cos(p.y)));
+    return glm::vec2(-1.0 + 2.0 * fract.x, -1.0 + 2.0 * fract.y);
+}
+
+float SimplexNoise(glm::vec2 p) {
+    float K1 = 0.366025404;
+    float K2 = 0.211324865;
+
+    glm::vec2  i = glm::floor(p + (p.x + p.y) * K1);
+    glm::vec2  a = p - i + (i.x + i.y) * K2;
+    float m = step(float(a.y), float(a.x));
+    glm::vec2  o = glm::vec2(m, 1.0 - m);
+    glm::vec2  b = a - o + K2;
+    glm::vec2  c = glm::vec2(a.x - 1.0 + 2.0 * K2, a.y - 1.0 + 2.0 * K2);
+    glm::vec3  h = glm::max(glm::vec3(0.5) - glm::vec3(glm::dot(a,a), glm::dot(b,b), glm::dot(c,c)), glm::vec3(0.0));
+    glm::vec3  n = h*h*h*h * glm::vec3(glm::dot(a, hash(i+glm::vec2(0.0))), glm::dot(b,hash(i+o)), glm::dot(c, hash(i+glm::vec2(1.0))));
+    return glm::dot(n, glm::vec3(70.0));
+}
+
+float moisture(glm::vec2 uv){
+    return SimplexNoise(uv);
+}
+
+float temperature(glm::vec2 uv){
+    return perlinNoise(uv);
+}
