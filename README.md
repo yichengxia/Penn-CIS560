@@ -80,7 +80,20 @@ m_chunksThatHaveBlockData and m_chunksThatHaveVBOs are protected by Mutexs. When
 
 # Milestone 3
 
-## Yicheng Xia (Grayscale image file as height map, Color image file as height map, Sound):
+## Yicheng Xia (Procedurally placed assets, Grayscale image file as height map, Color image file as height map, Sound):
+
+### Procedurally placed assets
+
+I implemented this feature by generating assets at about 1% of chances everytime we call the `Chunk::fillChunk()` function. Then a chunk may set asset blocks above the highest level of its original blocks.
+
+It will draw Penn logos or Winnie the Pooh statues randomly when choosing which to draw.
+Below shows what they look like when traveling through the scene.
+(The sky is set black for debug reasons.)
+
+<p align="center">
+    <img src="images/asset_penn.png" height="300">
+    <img src="images/asset_pooh.png" height="300">
+</p>
 
 ### Grayscale image file as height map
 
@@ -115,7 +128,7 @@ I also used a `std::vector<std::pair<glm::vec3, BlockType>>` instance `colorPair
 To put in the most accurate BlockType name, the algorithm is to loop through all the possible colors and choose the block with a color vector $\vec{c_b}$ that gives the minimum $||\vec{c_i} - \vec{c_b}||^2$,
 where $\vec{c_i}$ is the image color vector.
 
-I substituted the original **13th** column with a classic color palette and hardcoded the coordinates of the 15 colors as what I did for texuring before.
+I substituted the original **13th** column with a classic color palette and hardcoded the coordinates of the 16 colors as what I did for texuring before.
 Now we load `minecraft_textures_extended.png` instead.
 
 If the loaded image is not all gray, we then call `Terrain::updateColorHeights(int playerX, int playerZ, std::vector<std::vector<std::pair<float, BlockType>>> newBlocks)` and set blocks as is in `Chunk::fillChunk()` but with new heights and new color blocks.
