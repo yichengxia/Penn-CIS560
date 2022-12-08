@@ -153,7 +153,7 @@ void main()
 
     // Distance fog feature
     vec3 toEye = fs_Pos.xyz - u_Eye;
-    float fog = smoothstep(0.9, 1.0, min(1.0, length(toEye.xz / 192.0)));
+    float fog = smoothstep(0.9, 1.f, min(1.f, length(toEye.xz / 192.f)));
     vec2 screenSpaceUVs = gl_FragCoord.xy / vec2(u_Dimensions);
     vec4 textureColor = vec4(texture(u_Texture, screenSpaceUVs).rgb, 1.f);
     diffuseColor = mix(diffuseColor, textureColor, fog);
