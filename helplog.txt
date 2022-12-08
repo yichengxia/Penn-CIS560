@@ -18,6 +18,7 @@ MS3
 Yicheng Xia:
 Refered Qt documentation for QFileDialog, QImage, and QSoundEffect classes. https://doc.qt.io/
 Basic RGB colors: https://www.rapidtables.com/web/color/RGB_Color.html
+Winnie the Pooh pixel pattern: https://kandipatterns.com/patterns/characters/winnie-the-pooh-perler-22755
 
 Shiwei Ge:
 Refer to Adam's code showed in class

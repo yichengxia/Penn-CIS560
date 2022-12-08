@@ -214,6 +214,7 @@ void Chunk::createVBOdata() {
 void Chunk::fillChunk() {
     int x = m_pos.x;
     int z = m_pos.y;
+    int maxHeight = 0;
     // Populate blocks by x, z coordinates
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) {
@@ -245,6 +246,7 @@ void Chunk::fillChunk() {
             float s = glm::smoothstep(0.4f, 0.75f, moist);
             float t = glm::smoothstep(0.4f, 0.75f, temperature);
             int height = glm::mix(grasslandValue(pos), mountainValue(pos), eleMoi[0]);
+            maxHeight = max(height + 1, maxHeight);
             float threshold = 0.3;
             if (s > threshold && t > threshold) {
                 for (int y = 96; y <= height; ++y) {
@@ -281,7 +283,191 @@ void Chunk::fillChunk() {
                     setBlockAt(i, y, j, SAND);
                 }
             }
-
+        }
+    }
+    // Procedurally placed assets feature
+    // 1% chance of generating a logo randomly
+    if (rand() % 100 < 1) {
+        if (rand() % 2 < 1) { // PENN logo
+            for (int i = 7; i <= 8; i++) {
+                for (int j = 0; j <= 14; j++) {
+                    if (j == 3 || j == 7 || j == 11) {
+                        continue;
+                    }
+                    switch (j) {
+                        case 0:
+                            for (int k = 0; k <= 6; k++) {
+                                setBlockAt(i, maxHeight + k, j, PURPLE);
+                            }
+                            break;
+                        case 1:
+                            setBlockAt(i, maxHeight + 3, j, PURPLE);
+                            setBlockAt(i, maxHeight + 6, j, PURPLE);
+                            break;
+                        case 2:
+                            for (int k = 3; k <= 6; k++) {
+                                setBlockAt(i, maxHeight + k, j, PURPLE);
+                            }
+                            break;
+                        case 4:
+                            for (int k = 0; k <= 6; k++) {
+                                setBlockAt(i, maxHeight + k, j, PURPLE);
+                            }
+                            break;
+                        case 5:
+                            for (int k = 0; k <= 6; k += 3) {
+                                setBlockAt(i, maxHeight + k, j, PURPLE);
+                            }
+                            break;
+                        case 6:
+                            for (int k = 0; k <= 6; k += 3) {
+                                setBlockAt(i, maxHeight + k, j, PURPLE);
+                            }
+                            break;
+                        case 8:
+                            for (int k = 0; k <= 6; k++) {
+                                setBlockAt(i, maxHeight + k, j, PURPLE);
+                            }
+                            break;
+                        case 9:
+                            setBlockAt(i, maxHeight + 6, j, PURPLE);
+                            break;
+                        case 10:
+                            for (int k = 0; k <= 6; k++) {
+                                setBlockAt(i, maxHeight + k, j, PURPLE);
+                            }
+                            break;
+                        case 12:
+                            for (int k = 0; k <= 6; k++) {
+                                setBlockAt(i, maxHeight + k, j, PURPLE);
+                            }
+                            break;
+                        case 13:
+                            setBlockAt(i, maxHeight + 6, j, PURPLE);
+                            break;
+                        case 14:
+                            for (int k = 0; k <= 6; k++) {
+                                setBlockAt(i, maxHeight + k, j, PURPLE);
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        } else { // POOH logo
+            for (int i = 7; i <= 8; i++) {
+                for (int j = 0; j <= 11; j++) {
+                    switch (j) {
+                        case 0:
+                            for (int k = 3; k <= 6; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            for (int k = 10; k <= 12; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            break;
+                        case 1:
+                            for (int k = 2; k <= 12; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            break;
+                        case 2:
+                            for (int k = 1; k <= 6; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            setBlockAt(i, maxHeight + 7, j, BLACK);
+                            for (int k = 8; k <= 12; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            break;
+                        case 3:
+                            setBlockAt(i, maxHeight, j, YELLOW);
+                            setBlockAt(i, maxHeight + 1, j, YELLOW);
+                            setBlockAt(i, maxHeight + 2, j, BLACK);
+                            setBlockAt(i, maxHeight + 3, j, BLACK);
+                            setBlockAt(i, maxHeight + 4, j, YELLOW);
+                            setBlockAt(i, maxHeight + 5, j, BLACK);
+                            setBlockAt(i, maxHeight + 6, j, YELLOW);
+                            setBlockAt(i, maxHeight + 7, j, YELLOW);
+                            setBlockAt(i, maxHeight + 8, j, BLACK);
+                            setBlockAt(i, maxHeight + 9, j, YELLOW);
+                            setBlockAt(i, maxHeight + 10, j, YELLOW);
+                            break;
+                        case 4:
+                            setBlockAt(i, maxHeight, j, YELLOW);
+                            setBlockAt(i, maxHeight + 1, j, BLACK);
+                            for (int k = 2; k <= 10; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            break;
+                        case 5:
+                            setBlockAt(i, maxHeight, j, YELLOW);
+                            setBlockAt(i, maxHeight + 1, j, BLACK);
+                            setBlockAt(i, maxHeight + 2, j, YELLOW);
+                            setBlockAt(i, maxHeight + 3, j, YELLOW);
+                            setBlockAt(i, maxHeight + 4, j, BLACK);
+                            for (int k = 5; k <= 10; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            break;
+                        case 6:
+                            setBlockAt(i, maxHeight, j, YELLOW);
+                            setBlockAt(i, maxHeight + 1, j, BLACK);
+                            setBlockAt(i, maxHeight + 2, j, YELLOW);
+                            setBlockAt(i, maxHeight + 3, j, YELLOW);
+                            setBlockAt(i, maxHeight + 4, j, BLACK);
+                            for (int k = 5; k <= 10; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            break;
+                        case 7:
+                            setBlockAt(i, maxHeight, j, YELLOW);
+                            setBlockAt(i, maxHeight + 1, j, BLACK);
+                            for (int k = 2; k <= 10; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            break;
+                        case 8:
+                            setBlockAt(i, maxHeight, j, YELLOW);
+                            setBlockAt(i, maxHeight + 1, j, YELLOW);
+                            setBlockAt(i, maxHeight + 2, j, BLACK);
+                            setBlockAt(i, maxHeight + 3, j, BLACK);
+                            setBlockAt(i, maxHeight + 4, j, YELLOW);
+                            setBlockAt(i, maxHeight + 5, j, BLACK);
+                            setBlockAt(i, maxHeight + 6, j, YELLOW);
+                            setBlockAt(i, maxHeight + 7, j, YELLOW);
+                            setBlockAt(i, maxHeight + 8, j, BLACK);
+                            setBlockAt(i, maxHeight + 9, j, YELLOW);
+                            setBlockAt(i, maxHeight + 10, j, YELLOW);
+                            break;
+                        case 9:
+                            for (int k = 1; k <= 6; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            setBlockAt(i, maxHeight + 7, j, BLACK);
+                            for (int k = 8; k <= 12; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            break;
+                        case 10:
+                            for (int k = 2; k <= 12; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            break;
+                        case 11:
+                            for (int k = 3; k <= 6; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            for (int k = 10; k <= 12; k++) {
+                                setBlockAt(i, maxHeight + k, j, YELLOW);
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
         }
     }
 }
