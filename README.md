@@ -80,7 +80,7 @@ m_chunksThatHaveBlockData and m_chunksThatHaveVBOs are protected by Mutexs. When
 
 # Milestone 3
 
-## Yicheng Xia (Procedurally placed assets, Grayscale image file as height map, Color image file as height map, Sound):
+## Yicheng Xia (Procedurally placed assets, Grayscale image file as height map, Color image file as height map, Distance fog, Sound):
 
 ### Procedurally placed assets
 
@@ -144,6 +144,11 @@ Here is an example of loading a colored Winnie the Pooh image.
 </p>
 
 Sample images for the height map features are in the `images` folder.
+
+### Distance fog
+
+This feature adds an additional mixture between `diffuseColor` and `textureColor` after getting final shaded colors,
+with the `fog` parameter achieved from the relative distance between `fs_Pos` and `u_Eye`.
 
 ### Sound
 
