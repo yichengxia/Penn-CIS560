@@ -84,15 +84,18 @@ m_chunksThatHaveBlockData and m_chunksThatHaveVBOs are protected by Mutexs. When
 
 ### Procedurally placed assets
 
-I implemented this feature by generating assets at about 1% of chances everytime we call the `Chunk::fillChunk()` function. Then a chunk may set asset blocks above the highest level of its original blocks.
+I implemented this feature by generating assets at about 2% of chances everytime we call the `Chunk::fillChunk()` function. Then a chunk may set asset blocks above the highest level of its original blocks.
 
-It will draw Penn logos or Winnie the Pooh statues randomly when choosing which to draw.
+It will draw Penn logos or Winnie the Pooh statues depending on the heighest biome it is above.
+If the draw position is above `ICE`, you will see a blue Penn logo.
+If the draw position is above `SAND`, you will see a red Penn logo.
+In all other cases (`GRASS`, `STONE`, etc.), you will see the Winnie the Pooh statue.
 Below shows what they look like when traveling through the scene.
 (The sky is set black for debug reasons.)
 
 <p align="center">
-    <img src="images/asset_penn.png" height="300">
-    <img src="images/asset_pooh.png" height="300">
+    <img src="images/asset_penn_red.png" height="300">
+    <img src="images/asset_penn_blue_and_pooh.png" height="300">
 </p>
 
 ### Grayscale image file as height map

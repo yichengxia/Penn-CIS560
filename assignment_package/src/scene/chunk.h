@@ -74,4 +74,8 @@ public:
     void create(std::vector<glm::vec4> m_vboDataOpaque, std::vector<GLuint>,
                 std::vector<glm::vec4> m_vboDataTransparent, std::vector<GLuint> m_idxDataTransparent);
     void setMCount(int c);
+
+    // Functions for placing assets
+    void drawPenn(int maxHeight, BlockType t);
+    void drawPooh(int maxHeight);
 };
