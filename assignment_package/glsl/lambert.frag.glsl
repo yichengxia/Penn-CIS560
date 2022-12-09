@@ -16,6 +16,10 @@ uniform sampler2D u_Texture; // An addition to lambert.frag.glsl that makes use 
 uniform int u_Time; // An alteration to lambert.frag.glsl so that it includes a time variable as in Homework 5's OpenGL Fun,
                     // and uses this variable to animate the UVs on a LAVA block and WATER block.
 
+uniform ivec2 u_Dimensions; // Screen dimensions
+
+uniform vec3 u_Eye; // Camera pos
+
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
 in vec4 fs_Pos;
@@ -145,5 +149,14 @@ void main()
     //Add a small float value to the color multiplier
     //to simulate ambient lighting. This ensures that faces that are not
     //lit by our point light are not completely black.
-    out_Col = vec4(diffuseLight + ambientLight, 1) * diffuseColor;
+    diffuseColor = vec4(diffuseLight + ambientLight, 1.f) * diffuseColor;
+
+    // Distance fog feature
+    vec3 toEye = fs_Pos.xyz - u_Eye;
+    float fog = smoothstep(0.9, 1.f, min(1.f, length(toEye.xz / 192.f)));
+    vec2 screenSpaceUVs = gl_FragCoord.xy / vec2(u_Dimensions);
+    vec4 textureColor = vec4(texture(u_Texture, screenSpaceUVs).rgb, 1.f);
+    diffuseColor = mix(diffuseColor, textureColor, fog);
+
+    out_Col = vec4(diffuseColor.rgb, diffuseColor.a);
 }
