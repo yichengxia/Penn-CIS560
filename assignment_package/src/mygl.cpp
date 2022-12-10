@@ -170,7 +170,6 @@ void MyGL::sendPlayerDataToGUI() const {
 void MyGL::paintGL() {
     // Clear the screen so that we only see newly drawn images
     m_frameBuffer.bindFrameBuffer();
-    glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
 
     glViewport(0, 0, this->width() * this->devicePixelRatio(),
                this->height() * this->devicePixelRatio());
@@ -197,7 +196,10 @@ void MyGL::paintGL() {
 
     if (m_initialTerrainLoaded) {
         renderTerrain();
-
+        glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
+        glViewport(0, 0, this->width() * this->devicePixelRatio(),
+                   this->height() * this->devicePixelRatio());
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         m_frameBuffer.bindToTextureSlot(1);
         if (m_terrain.getBlockAt(m_player.mcr_position+glm::vec3(0,1.5,0)) == WATER) {
             // 1 is for under water visual effects
