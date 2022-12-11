@@ -80,6 +80,8 @@ m_chunksThatHaveBlockData and m_chunksThatHaveVBOs are protected by Mutexs. When
 
 # Milestone 3
 
+video link: https://drive.google.com/file/d/16W6zI-o4QVYX9s21-0BF_llBWI0S_K-B/view?usp=share_link
+
 ## Yicheng Xia (Procedurally placed assets, Grayscale image file as height map, Color image file as height map, Distance fog, Sound):
 
 ### Procedurally placed assets
