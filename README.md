@@ -1,6 +1,6 @@
 # Milestone 1
 
-video: https://drive.google.com/file/d/1GdR3cALOKgeEULuy8uhoAGtN6J9UAyO7/view?usp=share_link
+Video: https://drive.google.com/file/d/1GdR3cALOKgeEULuy8uhoAGtN6J9UAyO7/view?usp=share_link
 
 ## Shiwei Ge (Procedural Terrain):
 
@@ -45,7 +45,7 @@ If user pressed the mouse button, mygl invokes player's removeBlock()/placeBlock
 
 # Milestone 2
 
-video link: https://drive.google.com/file/d/1s1LMb4LP_DGimg_1N6t-qWyUFKAOoNIq/view?usp=sharing
+Video: https://drive.google.com/file/d/1s1LMb4LP_DGimg_1N6t-qWyUFKAOoNIq/view?usp=sharing
 
 ## Shiwei Ge (Cave System):
 
@@ -80,7 +80,7 @@ m_chunksThatHaveBlockData and m_chunksThatHaveVBOs are protected by Mutexs. When
 
 # Milestone 3
 
-video link: https://drive.google.com/file/d/16W6zI-o4QVYX9s21-0BF_llBWI0S_K-B/view?usp=share_link
+Final video: https://drive.google.com/file/d/1bmbRGTp9Q4WdQPFpfrLps7xQP2vzcrPa/view?usp=sharing
 
 ## Yicheng Xia (Procedurally placed assets, Grayscale image file as height map, Color image file as height map, Distance fog, Sound):
 
