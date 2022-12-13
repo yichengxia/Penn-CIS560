@@ -1,12 +1,14 @@
-# Milestone 1
+# Mini Minecraft
 
-Video: https://drive.google.com/file/d/1GdR3cALOKgeEULuy8uhoAGtN6J9UAyO7/view?usp=share_link
+This is our CIS 560 (Interactive Computer Graphics) final project in 2022 fall, produced by Penn Miners group: Yicheng Xia, Shiwei Ge, Yilin Guo.
 
-## Shiwei Ge (Procedural Terrain):
+Demo: https://www.youtube.com/watch?v=-ugbfOrRAF4
 
-> To implement the noise function for the height of the mountain I used fractal brownian noise overtop of perlin noise. For the rolling hills I used Worley noise. To interpolate bewteen biomes I used Perlin noise with a very large grid size. When this perlin noise was above 0.5 that signified mountains and below signified rolling hills. In between 0.4 and 0.6 I interpolated with the glm::mix function to provide a smoother transition between the regions.To test the noise functions I created I modified my HW4 and using a shader. I also created two Biomes field. The first mountain field is from 0<x<32, 0<z<64. The second Grassland field is from 32<x<64, 0<z<64.If the block is above 200 and it is the top, the block will be snow with color {1,1,1}. And between 128 and 138, it will be water if it's empty.
+## Procedural Terrain
 
-## Yicheng Xia (Efficient Terrain Rendering and Chunking):
+To implement the noise function for the height of the mountain I used fractal brownian noise overtop of perlin noise. For the rolling hills I used Worley noise. To interpolate bewteen biomes I used Perlin noise with a very large grid size. When this perlin noise was above 0.5 that signified mountains and below signified rolling hills. In between 0.4 and 0.6 I interpolated with the glm::mix function to provide a smoother transition between the regions.To test the noise functions I created I modified my HW4 and using a shader. I also created two Biomes field. The first mountain field is from 0<x<32, 0<z<64. The second Grassland field is from 32<x<64, 0<z<64.If the block is above 200 and it is the top, the block will be snow with color {1,1,1}. And between 128 and 138, it will be water if it's empty.
+
+## Efficient Terrain Rendering and Chunking
 
 Instead of repeatedly drawing `Cube` instances to genereate the game scene, I made `Chunk` inherit from `Drawable` and implemented its virtual function `createVBOdata()`.
 In `createVBOdata()`, vertex data are stored interleavedly in a format of `pos0nor0col0pos1nor1col1`, and index data are stored separately in another vector.
@@ -23,7 +25,7 @@ The function is called in `MyGL::renderTerrain()` with the player's position `mc
 
 Therefore, the rendering efficiency is greatly improved, supporting procedural terrain and interactive player functionnalities.
 
-## Yilin Guo (Game Engine Tick Function and Player Physics):
+## Game Engine Tick Function and Player Physics
 
 In mygl, construct InputBundle to record events (keyPress, keyRelease, mouseMove) compute the delta-time and pass into player's function tick().
 
@@ -43,15 +45,11 @@ After that, move player based on current velocity and delta-time. If user is not
 
 If user pressed the mouse button, mygl invokes player's removeBlock()/placeBlock() function. These two functions first use grid marching to check if there is a blockHit within 3 units, if yes, then set blockHit as EMPTY/set the last empty block along the rayDirection before blockHit as STONE.
 
-# Milestone 2
-
-Video: https://drive.google.com/file/d/1s1LMb4LP_DGimg_1N6t-qWyUFKAOoNIq/view?usp=sharing
-
-## Shiwei Ge (Cave System):
+## Cave System
 
 To implement the caves I created a new Perlin Noise function. This function took in a 3 vector instead of a 2 vector and used 8 surflets instead of 4. I used a decently large grid size to acheive this affect. I also created two new blocks, lava and bedrock. Lava is seen in pools at the bottom of caves and bedrock is seen at the very bottom layer of caves. The player will move more slowly when moving through either lava or water. The player will also sink in both of these.
 
-## Yicheng Xia (Texturing and Texture Animation):
+## Texturing and Texture Animation
 
 ### Texturing
 
@@ -66,7 +64,7 @@ The function `Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgra
 
 `BlockType` of `WATER` and `LAVA` are featured with animation with the incorporation of time variable `u_Time` applied to `diffuseColor` in the fragment shader.
 
-## Yilin Guo (Multithreaded Terrain Generation):
+## Multithreaded Terrain Generation
 
 Terrain has a multithreadedWork, which is called by MyGL::tick(). In multithreadedWork, every ~0.5 seconds, main thread is going to check for terrain expansion (5x5 set of terrain generation zones centered on the zone in which the Player currently stands).
 
@@ -78,13 +76,7 @@ Then main thread checks m_chunksThatHaveBlockData by sending filled Chunks to ne
 
 m_chunksThatHaveBlockData and m_chunksThatHaveVBOs are protected by Mutexs. When subthreads or main thred write to them, they need to get the lock first and release lock after finishing writing.
 
-# Milestone 3
-
-Final video: https://drive.google.com/file/d/1bmbRGTp9Q4WdQPFpfrLps7xQP2vzcrPa/view?usp=sharing
-
-## Yicheng Xia (Procedurally placed assets, Grayscale image file as height map, Color image file as height map, Distance fog, Sound):
-
-### Procedurally placed assets
+## Procedurally placed assets
 
 I implemented this feature by generating assets at about 2% of chances everytime we call the `Chunk::fillChunk()` function. Then a chunk may set asset blocks above the highest level of its original blocks.
 
@@ -100,7 +92,7 @@ Below shows what they look like when traveling through the scene.
     <img src="images/asset_penn_blue_and_pooh.png" height="300">
 </p>
 
-### Grayscale image file as height map
+## Grayscale image file as height map
 
 This feature allows the user to load a grayscale image to function as a height map that directly modifies a portion of the world.
 
@@ -124,7 +116,7 @@ Here is an example of loading a grayscale moon image.
     <img src="images/grayscale_result.png" height="300">
 </p>
 
-### Color image file as height map
+## Color image file as height map
 
 This feature has a similar logistic as _Grayscale image file as height map_.
 
@@ -147,12 +139,12 @@ Here is an example of loading a colored Winnie the Pooh image.
 
 Sample images for the height map features are in the `images` folder.
 
-### Distance fog
+## Distance fog
 
 This feature adds an additional mixture between `diffuseColor` and `textureColor` after getting final shaded colors,
 with the `fog` parameter achieved from the relative distance between `fs_Pos` and `u_Eye`.
 
-### Sound
+## Sound
 
 This feature is relatively easy to implement. I preloaded 2 QSoundEffect instances for footsteps and wind sounds.
 Footsteps sound works only when the player is in the ground mode,
@@ -161,9 +153,7 @@ and wind sound works only for the fight mode.
 When pressing `W`, `A`, `S`, `D` in ground mode, you can hear the footsteps sound.
 When pressing `W`, `A`, `S`, `D`, `Q`, `E` in flight mode, you can hear the wind sound.
 
-## Shiwei Ge (Additional Biomes, Post-process Camera Overlay)
-
-### Addition Biomes
+## Addition Biomes
 
 - Created two noise functions, which are temperature and moisture to determine which biome the player should be in
 
@@ -187,7 +177,7 @@ float threshold = 0.3;
     <img src="images/four-biome.png" height="500px" > 
 </p>
 
-### Post-process Camera Overlay
+## Post-process Camera Overlay
 
 - Implemented already in Milestone 2. Created ``post.frag.gls`` by reading ``Adam``'s code in Homework4 ~~~~.
 - Water Overlay
@@ -198,7 +188,7 @@ float threshold = 0.3;
 </p>
 
 
-## Yilin Guo (Day and night cycle)
+## Day and night cycle
 
 @ Create a procedural sky background using the raycast method: 
 
@@ -227,5 +217,3 @@ Calculate sun direction in the same way, which is the light direction used to ca
 Set basic ambientLight to vec3(0.5). 
 
 Then for each above stage (added stage 6: sunDirection.theta >= 0.8), multiply basic diffuseLight and ambientLight with different hard-coded value to match sky's sun and color respectively.
-
-
